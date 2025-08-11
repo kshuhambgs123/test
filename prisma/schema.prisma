@@ -1,0 +1,197 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model BillingDetails {
+  BillingID        String   @id @unique
+  userID           String
+  Url              String
+  CreditsRequested Int
+  date             DateTime
+  user             User     @relation(fields: [userID], references: [UserID])
+}
+
+model Logs {
+  LogID          String   @id @unique
+  userID         String
+  leadsRequested Int
+  leadsEnriched  Int?
+  apolloLink     String
+  fileName       String
+  creditsUsed    Float
+  url            String?
+  status         String
+  date           DateTime
+  email          String?
+  name           String?
+  user           User     @relation(fields: [userID], references: [UserID])
+}
+
+model User {
+  UserID                       String              @id @unique
+  name                         String
+  email                        String
+  companyName                  String?
+  phoneNumber                  String?
+  location                     String?
+  credits                      Float
+  apikey                       String?             @unique
+  date                         DateTime            @default(now())
+  heardFrom                    String?
+  TotalCreditsBought           Float               @default(0)
+  TotalCreditsUsed             Float               @default(0)
+  stripeCustomerId             String?             @unique
+  isActive                     Boolean             @default(true)
+  isSuspended                  Boolean             @default(false)
+  lastLoginAt                  DateTime?
+  suspendedAt                  DateTime?
+  suspendedReason              String?
+  stripeSubscriptionId         String?             @unique
+  subscriptionStatus           String?
+  subscriptionCurrentPeriodEnd DateTime?           @db.Timestamptz(6)
+  subscriptionPlan             String?
+  subscriptionCredits          Float?              @default(0)
+  last_webhook_timestamp       DateTime?           @db.Timestamptz(6)
+  last_processed_event_id      String?             @db.VarChar(255)
+  webhook_processing_lock      Boolean?            @default(false)
+  upgrade_lock                 Boolean?            @default(false)
+  AuditLog                     AuditLog[]
+  BillingDetails               BillingDetails[]
+  CreditTransaction            CreditTransaction[]
+  logs                         Logs[]
+  PendingUpgrade               PendingUpgrade[]
+  Subscription                 Subscription[]
+}
+
+model Admin {
+  email       String     @unique
+  password    String
+  createdAt   DateTime   @default(now())
+  id          String     @id @unique
+  isActive    Boolean    @default(true)
+  lastLoginAt DateTime?
+  name        String
+  permissions Json?
+  role        AdminRole  @default(ADMIN)
+  updatedAt   DateTime
+  AuditLog    AuditLog[]
+}
+
+model AuditLog {
+  id         String   @id @unique
+  adminId    String?
+  userId     String?
+  action     String
+  resource   String
+  resourceId String?
+  details    Json?
+  ipAddress  String?
+  userAgent  String?
+  createdAt  DateTime @default(now())
+  Admin      Admin?   @relation(fields: [adminId], references: [id])
+  User       User?    @relation(fields: [userId], references: [UserID])
+
+  @@index([action, createdAt])
+  @@index([adminId, createdAt])
+  @@index([resource, resourceId])
+}
+
+model CreditTransaction {
+  id              String                @id @unique
+  userId          String
+  amount          Float
+  type            CreditTransactionType
+  source          String?
+  sourceId        String?
+  description     String?
+  expiresAt       DateTime?
+  usedAt          DateTime?
+  remainingAmount Float                 @default(0)
+  createdAt       DateTime              @default(now())
+  updatedAt       DateTime
+  User            User                  @relation(fields: [userId], references: [UserID])
+
+  @@index([expiresAt])
+  @@index([userId, expiresAt])
+  @@index([userId, type, createdAt])
+}
+
+model StripePrice {
+  id            String         @id @unique
+  productId     String
+  unitAmount    Int
+  currency      String         @default("usd")
+  interval      String?
+  intervalCount Int?           @default(1)
+  credits       Int
+  active        Boolean        @default(true)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime
+  StripeProduct StripeProduct  @relation(fields: [productId], references: [id])
+  Subscription  Subscription[]
+}
+
+model StripeProduct {
+  id          String        @id @unique
+  name        String
+  description String?
+  active      Boolean       @default(true)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime
+  StripePrice StripePrice[]
+}
+
+model Subscription {
+  id                   String      @id @unique
+  userId               String
+  stripeSubscriptionId String      @unique
+  stripePriceId        String
+  status               String
+  currentPeriodStart   DateTime
+  currentPeriodEnd     DateTime
+  cancelAtPeriodEnd    Boolean     @default(false)
+  createdAt            DateTime    @default(now())
+  updatedAt            DateTime
+  StripePrice          StripePrice @relation(fields: [stripePriceId], references: [id])
+  User                 User        @relation(fields: [userId], references: [UserID])
+}
+
+model PendingUpgrade {
+  id             String   @id @unique
+  subscriptionId String   @unique
+  userId         String
+  targetTierName String
+  targetCredits  Float
+  targetPriceId  String
+  createdAt      DateTime @default(now())
+  expiresAt      DateTime
+  User           User     @relation(fields: [userId], references: [UserID])
+
+  @@index([expiresAt])
+  @@index([subscriptionId])
+  @@index([userId])
+}
+
+enum AdminRole {
+  SUPER_ADMIN
+  ADMIN
+  SUPPORT
+  ANALYST
+  BILLING
+}
+
+enum CreditTransactionType {
+  PURCHASE_SUBSCRIPTION
+  PURCHASE_PAYG
+  USAGE
+  EXPIRATION
+  ADMIN_ADJUSTMENT
+  BONUS
+  REFUND
+}
