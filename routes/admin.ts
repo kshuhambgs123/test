@@ -47,9 +47,13 @@ app.post("/login", async (req: LoginRequest, res: Response) => {
   //TESTED
   try {
     const { email, password } = req.body;
+    if (!email || !password) {
+      res.status(400).json({ message: "Email and password are required." });
+      return;
+    }
     const resp = await adminLogin(email, password);
     if (!resp) {
-      throw new Error("no admin account");
+      throw new Error("No admin account");
     }
     res.status(200).json({ message: "authorised", token: resp });
   } catch (error: any) {
@@ -61,12 +65,17 @@ app.post("/verifyToken", async (req: Request, res: Response) => {
   //TESTED
   try {
     const { token } = req.body;
-    const resp = await tokenVerify(token);
-    if (!resp) {
-      throw new Error("invalid token");
+    if (!token) {
+      res.status(400).json({ message: "Token is required." });
+      return;
     }
 
-    res.status(200).json({ message: "authorised" });
+    const resp = await tokenVerify(token);
+    if (!resp) {
+      throw new Error("Invalid token");
+    }
+
+    res.status(200).json({ message: "Authorized" });
   } catch (error: any) {
     res.status(404).json({ message: error.message });
   }
@@ -77,7 +86,7 @@ app.get("/getPrice", adminVerification, async (req: Request, res: Response) => {
   //TESTED
   try {
     if (!process.env.COSTPERLEAD) {
-      throw new Error("no price set");
+      throw new Error("Price not set.");
     }
     res.status(200).json({ resp: process.env.COSTPERLEAD });
   } catch (error: any) {
@@ -93,8 +102,8 @@ app.post(
     //TESTED
     try {
       const { newPrice } = req.body;
-      if (isNaN(newPrice) || !newPrice) {
-        throw new Error("Invalid price");
+       if (typeof newPrice !== "number" || isNaN(newPrice) || newPrice <= 0) {
+        throw new Error("Invalid price value.");
       }
 
       process.env.COSTPERLEAD = newPrice.toString();
@@ -111,7 +120,7 @@ app.post(
       );
       fs.writeFileSync(envFilePath, newEnvFileContent);
 
-      res.status(200).json({ resp: "updated price" });
+      res.status(200).json({ resp: "Price updated." });
     } catch (error: any) {
       res.status(400).json({ error: error.message });
     }
@@ -126,8 +135,8 @@ app.post(
     //TESTED
     try {
       const { automationLink } = req.body;
-      if (!automationLink) {
-        throw new Error("Invalid link");
+      if (!automationLink || automationLink.trim() === "") {
+        throw new Error("Invalid automation link.");
       }
 
       process.env.SEARCHAUTOMATIONAPI = automationLink.toString();
@@ -144,7 +153,7 @@ app.post(
       );
       fs.writeFileSync(envFilePath, newEnvFileContent);
 
-      res.status(200).json({ resp: "updated automation linke" });
+      res.status(200).json({ resp: "Automation link updated." });
     } catch (error: any) {
       res.status(400).json({ error: error.message });
     }
@@ -159,8 +168,8 @@ app.post(
     //TESTED
     try {
       const { statusLink } = req.body;
-      if (!statusLink) {
-        throw new Error("Invalid link");
+      if (!statusLink || statusLink.trim() === "") {
+        throw new Error("Invalid status link.");
       }
 
       process.env.SEARCHAUTOMATIONAPISTATUS = statusLink.toString();
@@ -177,7 +186,7 @@ app.post(
       );
       fs.writeFileSync(envFilePath, newEnvFileContent);
 
-      res.status(200).json({ resp: "updated automation linke" });
+      res.status(200).json({ resp: "Automation status link updated." });
     } catch (error: any) {
       res.status(400).json({ error: error.message });
     }
@@ -192,7 +201,7 @@ app.post(
     //TESTED
     try {
       const { newDNS } = req.body;
-      if (!newDNS) {
+      if (!newDNS || newDNS.trim() === "") {
         throw new Error("Invalid link");
       }
 
@@ -210,7 +219,7 @@ app.post(
       );
       fs.writeFileSync(envFilePath, newEnvFileContent);
 
-      res.status(200).json({ resp: "updated automation linke" });
+      res.status(200).json({ resp: "Automation link updated." });
     } catch (error: any) {
       res.status(400).json({ error: error.message });
     }
@@ -253,9 +262,13 @@ app.post(
     //TESTED
     try {
       const { userID } = req.body;
+      if (!userID) {
+       res.status(400).json({ message: "UserID is required." });
+       return;
+      }
       const resp = await generateAPIkey(userID);
       if (!resp) {
-        throw new Error("failed to generate key");
+        throw new Error("Failed to generate API key.");
       }
       res.status(200).json({ resp });
     } catch (error: any) {
@@ -271,9 +284,13 @@ app.post(
     //TESTED
     try {
       const { userID } = req.body;
+      if (!userID) {
+       res.status(400).json({ message: "UserID is required." });
+       return;
+      }
       const resp = await getApiKey(userID);
       if (!resp) {
-        throw new Error("this account do not have APIKEY access");
+        throw new Error("API key not found for this user.");
       }
       res.status(200).json({ resp });
     } catch (error: any) {
@@ -289,9 +306,13 @@ app.post(
     //TESTED
     try {
       const { userID } = req.body;
+      if (!userID) {
+       res.status(400).json({ message: "UserID is required." });
+       return;
+      }
       const resp = await revokeAPIkey(userID);
       if (!resp) {
-        throw new Error("failed to revoke key");
+        throw new Error("Failed to revoke API key.");
       }
       res.status(200).json({ resp });
     } catch (error: any) {
@@ -308,12 +329,13 @@ app.post(
     //TESTED
     try {
       const { userID, credits } = req.body;
+
       const resp = await updateCredits(userID, credits);
       if (resp === "negative") {
-        throw new Error("credits cannot be negative");
+        throw new Error("Credits cannot be negative");
       }
       if (!resp) {
-        throw new Error("failed to update credits");
+        throw new Error("Failed to update credits");
       }
       res.status(200).json({ resp });
     } catch (error: any) {
@@ -327,9 +349,13 @@ app.post("/getUser", adminVerification, async (req: Request, res: Response) => {
   //TESTED
   try {
     const { userID } = req.body;
+    if (!userID) {
+      res.status(400).json({ message: "UserID is required." });
+      return;
+    }
     const data = await getUserById(userID);
     if (!data) {
-      throw new Error("user not found");
+      throw new Error("User not found");
     }
     res.status(200).json({ data });
   } catch (error: any) {
@@ -344,10 +370,13 @@ app.post(
     //TESTED
     try {
       const { userID } = req.body;
-
+      if (!userID) {
+        res.status(400).json({ message: "UserID is required." });
+        return;
+      }
       const data = await getLogsByUserID(userID);
       if (!data) {
-        throw new Error("failed to find logs");
+        throw new Error("Logs not found.");
       }
       res.status(200).json({ data });
     } catch (error: any) {
@@ -365,7 +394,7 @@ app.get(
       const data = await getAllLogs();
 
       if (!data) {
-        throw new Error("failed to find logs");
+        throw new Error("Logs not found");
       }
       res.status(200).json({ data });
     } catch (error: any) {
@@ -382,7 +411,7 @@ app.post(
     try {
       const { newPrice } = req.body;
       if (isNaN(newPrice) || !newPrice) {
-        throw new Error("Invalid price");
+        throw new Error("Invalid price value");
       }
 
       process.env.RegistrationCredits = newPrice.toString();
@@ -399,7 +428,7 @@ app.post(
       );
       fs.writeFileSync(envFilePath, newEnvFileContent);
 
-      res.status(200).json({ resp: "updated registration credits" });
+      res.status(200).json({ resp: "Updated registration credits" });
     } catch (error: any) {
       res.status(400).json({ error: error.message });
     }
@@ -413,7 +442,7 @@ app.get(
     //TESTED
     try {
       if (!process.env.RegistrationCredits) {
-        throw new Error("no price set");
+        throw new Error("No price set");
       }
       res.status(200).json({ resp: process.env.RegistrationCredits });
     } catch (error: any) {
@@ -447,7 +476,7 @@ app.post(
         !url ||
         !status
       ) {
-        res.status(400).json({ message: "Missing fields" });
+        res.status(400).json({ message: "Missing required fields" });
         return;
       }
 
@@ -484,6 +513,11 @@ app.post(
   async (req: Request, res: Response) => {
     try {
       const { logID } = req.body;
+
+      if (!logID) {
+        res.status(400).json({ message: "logID is required" });
+        return;
+      }
 
       const log = await getOneLog(logID);
 
@@ -607,7 +641,7 @@ app.post(
       const { logID, creditsUsed, status, apollo_link, url } = req.body;
 
       if (!logID || !status || !apollo_link) {
-        res.status(400).json({ message: "Missing fields" });
+        res.status(400).json({ message: "Missing required fields" });
         return;
       }
 
@@ -641,7 +675,7 @@ app.get(
     try {
       const data = await getAllInvoices();
       if (!data) {
-        throw new Error("no bills found");
+        throw new Error("No bills found");
       }
       res.status(200).json({ data });
     } catch (error: any) {
@@ -659,7 +693,7 @@ app.post(
       const { userID } = req.body;
       const data = await getAllLogsByUserID(userID);
       if (!data) {
-        throw new Error("no bills found");
+        throw new Error("No bills found");
       }
       res.status(200).json({ data });
     } catch (error: any) {
@@ -674,7 +708,7 @@ app.post("/getBill", adminVerification, async (req: Request, res: Response) => {
     const { billingID } = req.body;
     const data = await getInvoiceByBillingID(billingID);
     if (!data) {
-      throw new Error("no bill found");
+      throw new Error("No bill found");
     }
     res.status(200).json({ data });
   } catch (error: any) {
@@ -690,7 +724,7 @@ app.get(
     try {
       const data = await getAllUsers();
       if (!data) {
-        throw new Error("no logs found");
+        throw new Error("No logs found");
       }
 
       let ranking = data.sort(
