@@ -3,7 +3,7 @@
 import userAuth from "../middleware/supabaseAuth";
 import express, { Request, Response } from "express";
 import Stripe from "stripe";
-import { addCredits } from "../db/user";
+import { addCredits, getUser } from "../db/user";
 import { stripeClient } from "../payments/stripe";
 import {
   getSubscriptionTiers,
@@ -24,6 +24,7 @@ import {
   markEventProcessed,
 } from "../utils/webhookIdempotency";
 import { deletePendingUpgrade, getPendingUpgrade } from "../db/pendingUpgrades";
+import { makeUpstashRequest } from "../caching/redis";
 
 const app = express.Router();
 const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET as string;
@@ -788,8 +789,25 @@ app.post(
     try {
       const { subscriptionId, userId } = req.body;
 
+      if (!subscriptionId) {
+        res.status(400).json({ message: "Missing subscription Id" });
+        return;
+      }
+      
+      const user_id = (req as any).user.id;
+      const user = await getUser(user_id);
+      if (!user) {
+            res.status(404).json({ message: "User not found" });
+            return;
+      }
+
+      if (user.stripeSubscriptionId !== subscriptionId) {
+        res.status(403).json({ message: "You are not allowed to cancel this subscription" });
+        return;
+      }
+
       console.log(
-        `---------------- Canceling subscription: ${subscriptionId} for user: ${userId}`
+        `---------------- Canceling subscription: ${subscriptionId} for user: ${userId ? userId : user_id}`
       );
 
       const canceledSubscription = await stripeClient.subscriptions.cancel(
@@ -1098,9 +1116,47 @@ app.post("/createCustomer", userAuth, async (req: Request, res: Response) => {
   }
 });
 
+const RATE_LIMIT_WINDOW = 60; // seconds
+const RATE_LIMIT_MAX = 5; // max requests per window
+
+async function isRateLimited(userKey: string): Promise<boolean> {
+  const now = Date.now();
+  
+  const key = `ratelimit:${userKey}`;
+
+  const incrementResp = await makeUpstashRequest(["INCR", key]);
+
+  if (incrementResp.error) {
+    console.error("Rate limit increment failed:", incrementResp.error);
+    return false;
+  }
+
+  const currentCount = Number(incrementResp.result);
+
+  if (currentCount === 1) {
+    await makeUpstashRequest(["EXPIRE", key, RATE_LIMIT_WINDOW.toString()]);
+  }
+
+  return currentCount > RATE_LIMIT_MAX;
+}
+
 app.post("/retrieveCoupon", userAuth, async (req: Request, res: Response) => {
   try {
     const { couponCode } = req.body;
+
+    if (!couponCode) {
+        return res.status(400).json({ message: "Missing coupon code" });
+    }
+    
+    const userKey = (req as any).user?.id || req.ip;
+
+    if (await isRateLimited(userKey)) {
+        res.status(429).json({
+          message: "Too many coupon requests. Please try again in 1 minute.",
+        });
+        return;
+    }
+
     const coupon = await stripeClient.coupons.retrieve(couponCode);
     res.status(200).json({ coupon });
   } catch (error: any) {

@@ -62,13 +62,13 @@ app.post("/createInvoice", userAuth, async (req, res) => {
       creditsRequested
     );
     if (!invoiceLog) {
-      res.status(500).json({ message: "Invoice not logged" });
+      res.status(500).json({ message: "Invoice logging failed" });
       return;
     }
 
     res
       .status(200)
-      .json({ message: "Invoice created", invoice: uploadedInvoice.Location });
+      .json({ message: "Invoice created successfully", invoice: uploadedInvoice.Location });
   } catch (e: any) {
     res.status(500).json({ message: e.message });
   }
