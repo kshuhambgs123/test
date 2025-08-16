@@ -7,7 +7,7 @@ const UPSTASH_TOKEN = process.env.UPSTASH_REDIS_REST_TOKEN;
 const CACHE_KEY = "searchleads_subscription_tiers";
 const DEFAULT_TTL = Number(process.env.UPSTASH_REDIS_TTL) || 3600; // 1 hour in seconds
 
-async function makeUpstashRequest(command: string[]): Promise<UpstashResponse> {
+export async function makeUpstashRequest(command: string[]): Promise<UpstashResponse> {
   if (!UPSTASH_URL || !UPSTASH_TOKEN) {
     console.warn("Upstash Redis not configured, skipping cache operation");
     return { error: "Redis not configured" };

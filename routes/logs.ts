@@ -15,8 +15,8 @@ app.get(
       const userID = (req as any).user.id;
       const logs = await getLogsByUserID(userID);
 
-      if (!logs) {
-        res.status(404).json({ message: "Logs not found" });
+      if (!logs || logs.length === 0) {
+        res.status(404).json({ message: "No logs found for this user" });
         return;
       }
 
@@ -34,6 +34,10 @@ app.post(
   async (req: Request, res: Response): Promise<void> => {
     try {
       const { logID } = req.body;
+      if (!logID) {
+       res.status(400).json({ message: "logID is required" });
+       return;
+      }
       const log = await getOneLog(logID);
 
       if (!log) {

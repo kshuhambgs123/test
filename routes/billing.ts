@@ -38,17 +38,14 @@ app.post("/createInvoice", userAuth, async (req, res) => {
       amountPaid
     );
 
-    if (!invoiceData) {
-      res.status(500).json({ message: "Invoice not created" });
-      return;
-    }
+    if (!invoiceData) throw new Error("Invoice generation failed");    
     const time = new Date().getTime();
     const fileName = `${from}-${userID}-${time}.pdf`;
     const param = {
       Bucket: "SearchleadsInvoices",
       Key: fileName,
       Body: invoiceData,
-      ACL: "public-read",
+      // ACL: "public-read",
       ContentType: "application/pdf",
     };
 
@@ -65,13 +62,13 @@ app.post("/createInvoice", userAuth, async (req, res) => {
       creditsRequested
     );
     if (!invoiceLog) {
-      res.status(500).json({ message: "Invoice not logged" });
+      res.status(500).json({ message: "Invoice logging failed" });
       return;
     }
 
     res
       .status(200)
-      .json({ message: "Invoice created", invoice: uploadedInvoice.Location });
+      .json({ message: "Invoice created successfully", invoice: uploadedInvoice.Location });
   } catch (e: any) {
     res.status(500).json({ message: e.message });
   }
@@ -96,6 +93,11 @@ app.get("/getBillsByUser", userAuth, async (req, res) => {
 app.post("/getBill", userAuth, async (req, res) => {
   try {
     const { billingID } = req.body;
+
+    if (!billingID) {
+      res.status(404).json({ message: "Bill id is required" });
+      return;
+    }
 
     const bill = await getInvoiceByBillingID(billingID);
     if (!bill) {

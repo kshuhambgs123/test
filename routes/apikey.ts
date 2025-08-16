@@ -33,7 +33,7 @@ app.post(
       const { apolloLink, noOfLeads, fileName } = req.body;
 
       if (!apolloLink || !noOfLeads || !fileName) {
-        res.status(400).json({ message: "Missing fields" });
+        res.status(400).json({ message: "Missing required fields" });
         return;
       }
 
@@ -43,6 +43,13 @@ app.post(
       }
 
       const noOfLeadsNumeric = parseInt(noOfLeads);
+
+      if (
+        noOfLeadsNumeric <= 0
+      ) {
+        res.status(400).json({ message: "Invalid number of leads" });
+        return;
+      }
 
       if (
         noOfLeadsNumeric < 1000 ||
@@ -254,7 +261,7 @@ app.post(
       const { logID } = req.body;
 
       if (!logID) {
-        res.status(400).json({ message: "Missing fields" });
+        res.status(400).json({ message: "Missing required fields" });
         return;
       }
 

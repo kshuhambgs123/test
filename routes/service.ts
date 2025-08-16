@@ -12,6 +12,14 @@ import { LeadStatusResponse } from "../types/interfaces";
 import verifySessionToken from "../middleware/supabaseAuth";
 dotenv.config();
 
+function checkUrl(url: string): boolean {
+  const basePattern = /^https:\/\/app\.apollo\.io\/#\/people\?/;
+
+  const invalidPattern = /contactLabelIds\[\]=/;
+
+  return basePattern.test(url) && !invalidPattern.test(url);
+}
+
 const app = express.Router();
 
 app.post(
@@ -24,7 +32,24 @@ app.post(
 
       const { apolloLink, noOfLeads, fileName } = req.body;
 
+       if (!apolloLink || !noOfLeads || !fileName) {
+        res.status(400).json({ message: "Missing required fields" });
+        return;
+      }
+
+      if (!checkUrl(apolloLink)) {
+        res.status(400).json({ message: "Invalid URL" });
+        return;
+      }
+
       const noOfLeadsNumeric = parseInt(noOfLeads);
+      if (
+        noOfLeadsNumeric <= 0
+      ) {
+        res.status(400).json({ message: "Invalid number of leads" });
+        return;
+      }
+      
       const credits = noOfLeadsNumeric;
 
       if (!user) {

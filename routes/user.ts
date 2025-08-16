@@ -17,6 +17,15 @@ app.post(
       const email = (req as any).user.email;
       const { fullName, companyName, phoneNumber, location, heardFrom } =
         req.body;
+
+      // First, check if user already exists
+      const existingUser = await getUser(userID);
+
+      if (existingUser) {
+        res.status(409).json({ message: "User already exists" });
+        return;
+      }
+
       const credits = process.env.RegistrationCredits as string;
       const user = await createUser(
         fullName,
@@ -30,11 +39,11 @@ app.post(
         heardFrom
       );
       if (!user) {
-        res.status(400).json({ message: "User already exists" });
+        res.status(500).json({ message: "Failed to create user" });
         return;
       }
 
-      res.status(200).json({ message: "User created successfully", user });
+      res.status(201).json({ message: "User created successfully", user });
     } catch (error: any) {
       res.status(500).json({ message: error.message });
     }
