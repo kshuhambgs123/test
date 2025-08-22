@@ -6,6 +6,7 @@ import apiKeyRoutes from "./apikey";
 import serviceRoutes from "./service";
 import billingRoutes from "./billing";
 import paymentRoutes from "./payments";
+import sampleSearchRoutes from "./search_auto";
 
 const app = express.Router();
 
@@ -16,5 +17,6 @@ app.use("/v1", apiKeyRoutes);
 app.use("/service", serviceRoutes);
 app.use("/billing", billingRoutes);
 app.use("/payments", paymentRoutes);
+app.use("/people", sampleSearchRoutes);
 
 export default app;
