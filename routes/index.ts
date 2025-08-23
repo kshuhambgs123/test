@@ -7,6 +7,7 @@ import serviceRoutes from "./service";
 import billingRoutes from "./billing";
 import paymentRoutes from "./payments";
 import sampleSearchRoutes from "./search_auto";
+import industryRoutes from "./industry";
 
 const app = express.Router();
 
@@ -18,5 +19,6 @@ app.use("/service", serviceRoutes);
 app.use("/billing", billingRoutes);
 app.use("/payments", paymentRoutes);
 app.use("/people", sampleSearchRoutes);
+app.use("/industry", industryRoutes);
 
 export default app;

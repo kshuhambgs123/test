@@ -1,0 +1,742 @@
+[
+  {
+    "industry_id": "5567cd4773696439b10b0000",
+    "display_name": "information technology & services",
+    "cleaned_name": "information technology & services"
+  },
+  {
+    "industry_id": "5567cd4773696439dd350000",
+    "display_name": "construction",
+    "cleaned_name": "construction"
+  },
+  {
+    "industry_id": "5567cd467369644d39040000",
+    "display_name": "marketing & advertising",
+    "cleaned_name": "marketing & advertising"
+  },
+  {
+    "industry_id": "5567cd477369645401010000",
+    "display_name": "real estate",
+    "cleaned_name": "real estate"
+  },
+  {
+    "industry_id": "5567cddb7369644d250c0000",
+    "display_name": "health, wellness & fitness",
+    "cleaned_name": "health, wellness & fitness"
+  },
+  {
+    "industry_id": "5567cdd47369643dbf260000",
+    "display_name": "management consulting",
+    "cleaned_name": "management consulting"
+  },
+  {
+    "industry_id": "5567cd4e7369643b70010000",
+    "display_name": "computer software",
+    "cleaned_name": "computer software"
+  },
+  {
+    "industry_id": "5567cd4d736964397e020000",
+    "display_name": "internet",
+    "cleaned_name": "internet"
+  },
+  {
+    "industry_id": "5567ced173696450cb580000",
+    "display_name": "retail",
+    "cleaned_name": "retail"
+  },
+  {
+    "industry_id": "5567cdd67369643e64020000",
+    "display_name": "financial services",
+    "cleaned_name": "financial services"
+  },
+  {
+    "industry_id": "5567d1127261697f2b1d0000",
+    "display_name": "consumer services",
+    "cleaned_name": "consumer services"
+  },
+  {
+    "industry_id": "5567cdde73696439812c0000",
+    "display_name": "hospital & health care",
+    "cleaned_name": "hospital & health care"
+  },
+  {
+    "industry_id": "5567cdf27369644cfd800000",
+    "display_name": "automotive",
+    "cleaned_name": "automotive"
+  },
+  {
+    "industry_id": "5567e0e0736964198de70700",
+    "display_name": "restaurants",
+    "cleaned_name": "restaurants"
+  },
+  {
+    "industry_id": "5567ce9e736964540d540000",
+    "display_name": "education management",
+    "cleaned_name": "education management"
+  },
+  {
+    "industry_id": "5567ce1e7369643b806a0000",
+    "display_name": "food & beverages",
+    "cleaned_name": "food & beverages"
+  },
+  {
+    "industry_id": "5567cdbc73696439d90b0000",
+    "display_name": "design",
+    "cleaned_name": "design"
+  },
+  {
+    "industry_id": "5567ce9d7369643bc19c0000",
+    "display_name": "hospitality",
+    "cleaned_name": "hospitality"
+  },
+  {
+    "industry_id": "5567ce1f7369643b78570000",
+    "display_name": "accounting",
+    "cleaned_name": "accounting"
+  },
+  {
+    "industry_id": "5567cd8e7369645409450000",
+    "display_name": "events services",
+    "cleaned_name": "events services"
+  },
+  {
+    "industry_id": "5567cd4773696454303a0000",
+    "display_name": "nonprofit organization management",
+    "cleaned_name": "nonprofit organization management"
+  },
+  {
+    "industry_id": "5567cdd37369643b80510000",
+    "display_name": "entertainment",
+    "cleaned_name": "entertainment"
+  },
+  {
+    "industry_id": "5567cd4c73696439c9030000",
+    "display_name": "electrical/electronic manufacturing",
+    "cleaned_name": "electrical/electronic manufacturing"
+  },
+  {
+    "industry_id": "5567cdd87369643bc12f0000",
+    "display_name": "leisure, travel & tourism",
+    "cleaned_name": "leisure, travel & tourism"
+  },
+  {
+    "industry_id": "5567cd49736964541d010000",
+    "display_name": "professional training & coaching",
+    "cleaned_name": "professional training & coaching"
+  },
+  {
+    "industry_id": "5567cd4e7369644cf93b0000",
+    "display_name": "transportation/trucking/railroad",
+    "cleaned_name": "transportation/trucking/railroad"
+  },
+  {
+    "industry_id": "5567ce1f7369644d391c0000",
+    "display_name": "law practice",
+    "cleaned_name": "law practice"
+  },
+  {
+    "industry_id": "5567cd82736964540d0b0000",
+    "display_name": "apparel & fashion",
+    "cleaned_name": "apparel & fashion"
+  },
+  {
+    "industry_id": "5567cdb77369645401080000",
+    "display_name": "architecture & planning",
+    "cleaned_name": "architecture & planning"
+  },
+  {
+    "industry_id": "5567ce2673696453d95c0000",
+    "display_name": "mechanical or industrial engineering",
+    "cleaned_name": "mechanical or industrial engineering"
+  },
+  {
+    "industry_id": "5567cdd973696453d93f0000",
+    "display_name": "insurance",
+    "cleaned_name": "insurance"
+  },
+  {
+    "industry_id": "5567cd4c7369644d39080000",
+    "display_name": "telecommunications",
+    "cleaned_name": "telecommunications"
+  },
+  {
+    "industry_id": "5567e0e37369640e5ac10c00",
+    "display_name": "human resources",
+    "cleaned_name": "human resources"
+  },
+  {
+    "industry_id": "5567e09973696410db020800",
+    "display_name": "staffing & recruiting",
+    "cleaned_name": "staffing & recruiting"
+  },
+  {
+    "industry_id": "5567ce227369644eed290000",
+    "display_name": "sports",
+    "cleaned_name": "sports"
+  },
+  {
+    "industry_id": "5567ce2d7369644d25250000",
+    "display_name": "legal services",
+    "cleaned_name": "legal services"
+  },
+  {
+    "industry_id": "5567cdd97369645624020000",
+    "display_name": "oil & energy",
+    "cleaned_name": "oil & energy"
+  },
+  {
+    "industry_id": "5567e0ea7369640d2ba31600",
+    "display_name": "media production",
+    "cleaned_name": "media production"
+  },
+  {
+    "industry_id": "5567cd4973696439d53c0000",
+    "display_name": "machinery",
+    "cleaned_name": "machinery"
+  },
+  {
+    "industry_id": "5567d01e73696457ee100000",
+    "display_name": "wholesale",
+    "cleaned_name": "wholesale"
+  },
+  {
+    "industry_id": "5567ce987369643b789e0000",
+    "display_name": "consumer goods",
+    "cleaned_name": "consumer goods"
+  },
+  {
+    "industry_id": "5567cd4f736964540d050000",
+    "display_name": "music",
+    "cleaned_name": "music"
+  },
+  {
+    "industry_id": "5567cd4f7369644cfd250000",
+    "display_name": "photography",
+    "cleaned_name": "photography"
+  },
+  {
+    "industry_id": "5567d0467369645dbc200000",
+    "display_name": "medical practice",
+    "cleaned_name": "medical practice"
+  },
+  {
+    "industry_id": "5567e1ae73696423dc040000",
+    "display_name": "cosmetics",
+    "cleaned_name": "cosmetics"
+  },
+  {
+    "industry_id": "5567ce5b736964540d280000",
+    "display_name": "environmental services",
+    "cleaned_name": "environmental services"
+  },
+  {
+    "industry_id": "5567cd4d73696439d9040000",
+    "display_name": "graphic design",
+    "cleaned_name": "graphic design"
+  },
+  {
+    "industry_id": "5567e0fa73696410e4c51200",
+    "display_name": "business supplies & equipment",
+    "cleaned_name": "business supplies & equipment"
+  },
+  {
+    "industry_id": "5567cd49736964540d020000",
+    "display_name": "renewables & environment",
+    "cleaned_name": "renewables & environment"
+  },
+  {
+    "industry_id": "5567ce9c7369643bc9980000",
+    "display_name": "facilities services",
+    "cleaned_name": "facilities services"
+  },
+  {
+    "industry_id": "5567ce5b73696439a17a0000",
+    "display_name": "publishing",
+    "cleaned_name": "publishing"
+  },
+  {
+    "industry_id": "5567e1b3736964208b280000",
+    "display_name": "food production",
+    "cleaned_name": "food production"
+  },
+  {
+    "industry_id": "5567cd4d73696439d9030000",
+    "display_name": "arts & crafts",
+    "cleaned_name": "arts & crafts"
+  },
+  {
+    "industry_id": "5567e1a17369641ea9d30100",
+    "display_name": "building materials",
+    "cleaned_name": "building materials"
+  },
+  {
+    "industry_id": "5567e13a73696418756e0200",
+    "display_name": "civil engineering",
+    "cleaned_name": "civil engineering"
+  },
+  {
+    "industry_id": "5567e0f27369640e5aed0c00",
+    "display_name": "religious institutions",
+    "cleaned_name": "religious institutions"
+  },
+  {
+    "industry_id": "5567ce5973696453d9780000",
+    "display_name": "public relations & communications",
+    "cleaned_name": "public relations & communications"
+  },
+  {
+    "industry_id": "5567cd4c73696453e1300000",
+    "display_name": "higher education",
+    "cleaned_name": "higher education"
+  },
+  {
+    "industry_id": "5567cd4d7369644d513e0000",
+    "display_name": "printing",
+    "cleaned_name": "printing"
+  },
+  {
+    "industry_id": "5567cede73696440d0040000",
+    "display_name": "furniture",
+    "cleaned_name": "furniture"
+  },
+  {
+    "industry_id": "5567e3f3736964395d7a0000",
+    "display_name": "mining & metals",
+    "cleaned_name": "mining & metals"
+  },
+  {
+    "industry_id": "5567cd4973696439b9010000",
+    "display_name": "logistics & supply chain",
+    "cleaned_name": "logistics & supply chain"
+  },
+  {
+    "industry_id": "5567e09f736964160ebb0100",
+    "display_name": "research",
+    "cleaned_name": "research"
+  },
+  {
+    "industry_id": "5567e0eb73696410e4bd1200",
+    "display_name": "pharmaceuticals",
+    "cleaned_name": "pharmaceuticals"
+  },
+  {
+    "industry_id": "5567d02b7369645d8b140000",
+    "display_name": "individual & family services",
+    "cleaned_name": "individual & family services"
+  },
+  {
+    "industry_id": "5567e1b97369641ea9690200",
+    "display_name": "medical devices",
+    "cleaned_name": "medical devices"
+  },
+  {
+    "industry_id": "5567cdda7369644eed130000",
+    "display_name": "civic & social organization",
+    "cleaned_name": "civic & social organization"
+  },
+  {
+    "industry_id": "5567e19c7369641c48e70100",
+    "display_name": "e-learning",
+    "cleaned_name": "e-learning"
+  },
+  {
+    "industry_id": "5567e19b7369641ead740000",
+    "display_name": "security & investigations",
+    "cleaned_name": "security & investigations"
+  },
+  {
+    "industry_id": "5567e21e73696426a1030000",
+    "display_name": "chemicals",
+    "cleaned_name": "chemicals"
+  },
+  {
+    "industry_id": "5567cd527369643981050000",
+    "display_name": "government administration",
+    "cleaned_name": "government administration"
+  },
+  {
+    "industry_id": "5567cdb373696439dd540000",
+    "display_name": "online media",
+    "cleaned_name": "online media"
+  },
+  {
+    "industry_id": "5567e0bc7369641d11550200",
+    "display_name": "investment management",
+    "cleaned_name": "investment management"
+  },
+  {
+    "industry_id": "5567cd4f7369644d2d010000",
+    "display_name": "farming",
+    "cleaned_name": "farming"
+  },
+  {
+    "industry_id": "5567cdd973696439a1370000",
+    "display_name": "writing & editing",
+    "cleaned_name": "writing & editing"
+  },
+  {
+    "industry_id": "5567e1327369641d91ce0300",
+    "display_name": "textiles",
+    "cleaned_name": "textiles"
+  },
+  {
+    "industry_id": "5567ce2773696454308f0000",
+    "display_name": "mental health care",
+    "cleaned_name": "mental health care"
+  },
+  {
+    "industry_id": "5567cdd97369645430680000",
+    "display_name": "primary/secondary education",
+    "cleaned_name": "primary/secondary education"
+  },
+  {
+    "industry_id": "5567e0f973696416d34e0200",
+    "display_name": "broadcast media",
+    "cleaned_name": "broadcast media"
+  },
+  {
+    "industry_id": "5567d08e7369645dbc4b0000",
+    "display_name": "biotechnology",
+    "cleaned_name": "biotechnology"
+  },
+  {
+    "industry_id": "5567e0c97369640d2b3b1600",
+    "display_name": "information services",
+    "cleaned_name": "information services"
+  },
+  {
+    "industry_id": "5567ce9c7369644eed680000",
+    "display_name": "international trade & development",
+    "cleaned_name": "international trade & development"
+  },
+  {
+    "industry_id": "5567cdd7736964540d130000",
+    "display_name": "motion pictures & film",
+    "cleaned_name": "motion pictures & film"
+  },
+  {
+    "industry_id": "5567e1947369641ead570000",
+    "display_name": "consumer electronics",
+    "cleaned_name": "consumer electronics"
+  },
+  {
+    "industry_id": "5567ce237369644ee5490000",
+    "display_name": "banking",
+    "cleaned_name": "banking"
+  },
+  {
+    "industry_id": "5567ce9d7369645430c50000",
+    "display_name": "import & export",
+    "cleaned_name": "import & export"
+  },
+  {
+    "industry_id": "5567e1337369641ad2970000",
+    "display_name": "industrial automation",
+    "cleaned_name": "industrial automation"
+  },
+  {
+    "industry_id": "5567e134736964214f5e0000",
+    "display_name": "recreational facilities & services",
+    "cleaned_name": "recreational facilities & services"
+  },
+  {
+    "industry_id": "5567e0af7369641ec7300000",
+    "display_name": "performing arts",
+    "cleaned_name": "performing arts"
+  },
+  {
+    "industry_id": "5567e2127369642420170000",
+    "display_name": "utilities",
+    "cleaned_name": "utilities"
+  },
+  {
+    "industry_id": "5567e113736964198d5e0800",
+    "display_name": "sporting goods",
+    "cleaned_name": "sporting goods"
+  },
+  {
+    "industry_id": "5567e2097369642420150000",
+    "display_name": "fine art",
+    "cleaned_name": "fine art"
+  },
+  {
+    "industry_id": "5567e0bf7369641d115f0200",
+    "display_name": "airlines/aviation",
+    "cleaned_name": "airlines/aviation"
+  },
+  {
+    "industry_id": "5567cd877369644cf94b0000",
+    "display_name": "computer & network security",
+    "cleaned_name": "computer & network security"
+  },
+  {
+    "industry_id": "5567cd8273696439b1240000",
+    "display_name": "maritime",
+    "cleaned_name": "maritime"
+  },
+  {
+    "industry_id": "5567cda97369644cfd3e0000",
+    "display_name": "luxury goods & jewelry",
+    "cleaned_name": "luxury goods & jewelry"
+  },
+  {
+    "industry_id": "5567ce9673696439d5c10000",
+    "display_name": "veterinary",
+    "cleaned_name": "veterinary"
+  },
+  {
+    "industry_id": "5567e1587369641c48370000",
+    "display_name": "venture capital & private equity",
+    "cleaned_name": "venture capital & private equity"
+  },
+  {
+    "industry_id": "5567cd4d7369643b78100000",
+    "display_name": "wine & spirits",
+    "cleaned_name": "wine & spirits"
+  },
+  {
+    "industry_id": "5567cdda7369644cf95d0000",
+    "display_name": "plastics",
+    "cleaned_name": "plastics"
+  },
+  {
+    "industry_id": "5567e0dd73696416d3c20100",
+    "display_name": "aviation & aerospace",
+    "cleaned_name": "aviation & aerospace"
+  },
+  {
+    "industry_id": "5567e1887369641d68d40100",
+    "display_name": "commercial real estate",
+    "cleaned_name": "commercial real estate"
+  },
+  {
+    "industry_id": "5567cd8b736964540d0f0000",
+    "display_name": "computer games",
+    "cleaned_name": "computer games"
+  },
+  {
+    "industry_id": "5567e36973696431a4480000",
+    "display_name": "packaging & containers",
+    "cleaned_name": "packaging & containers"
+  },
+  {
+    "industry_id": "5567e09473696410dbf00700",
+    "display_name": "executive office",
+    "cleaned_name": "executive office"
+  },
+  {
+    "industry_id": "5567e0d47369641233eb0600",
+    "display_name": "computer hardware",
+    "cleaned_name": "computer hardware"
+  },
+  {
+    "industry_id": "5567cdbe7369643b78360000",
+    "display_name": "computer networking",
+    "cleaned_name": "computer networking"
+  },
+  {
+    "industry_id": "5567e1387369641ec75d0200",
+    "display_name": "market research",
+    "cleaned_name": "market research"
+  },
+  {
+    "industry_id": "5567d04173696457ee520000",
+    "display_name": "outsourcing/offshoring",
+    "cleaned_name": "outsourcing/offshoring"
+  },
+  {
+    "industry_id": "5567e2907369642433e60200",
+    "display_name": "program development",
+    "cleaned_name": "program development"
+  },
+  {
+    "industry_id": "5567e1097369641d91230300",
+    "display_name": "translation & localization",
+    "cleaned_name": "translation & localization"
+  },
+  {
+    "industry_id": "5567ce9673696453d99f0000",
+    "display_name": "philanthropy",
+    "cleaned_name": "philanthropy"
+  },
+  {
+    "industry_id": "5567cd4a7369643ba9010000",
+    "display_name": "public safety",
+    "cleaned_name": "public safety"
+  },
+  {
+    "industry_id": "5567e27c7369642ade490000",
+    "display_name": "alternative medicine",
+    "cleaned_name": "alternative medicine"
+  },
+  {
+    "industry_id": "5567e15373696422aa0a0000",
+    "display_name": "museums & institutions",
+    "cleaned_name": "museums & institutions"
+  },
+  {
+    "industry_id": "5567e127736964181e700200",
+    "display_name": "warehousing",
+    "cleaned_name": "warehousing"
+  },
+  {
+    "industry_id": "5567e1097369641b5f810500",
+    "display_name": "defense & space",
+    "cleaned_name": "defense & space"
+  },
+  {
+    "industry_id": "5567cd4a73696439a9010000",
+    "display_name": "newspapers",
+    "cleaned_name": "newspapers"
+  },
+  {
+    "industry_id": "5567e97f7369641e57730100",
+    "display_name": "paper & forest products",
+    "cleaned_name": "paper & forest products"
+  },
+  {
+    "industry_id": "5567e0e073696408da441e00",
+    "display_name": "law enforcement",
+    "cleaned_name": "law enforcement"
+  },
+  {
+    "industry_id": "5567e1ab7369641f6d660100",
+    "display_name": "investment banking",
+    "cleaned_name": "investment banking"
+  },
+  {
+    "industry_id": "5567e29b736964256c370100",
+    "display_name": "government relations",
+    "cleaned_name": "government relations"
+  },
+  {
+    "industry_id": "5567d2ad7261697f2b1f0100",
+    "display_name": "fund-raising",
+    "cleaned_name": "fund-raising"
+  },
+  {
+    "industry_id": "5567e1de7369642069ea0100",
+    "display_name": "think tanks",
+    "cleaned_name": "think tanks"
+  },
+  {
+    "industry_id": "5567cd4f736964397e030000",
+    "display_name": "glass, ceramics & concrete",
+    "cleaned_name": "glass, ceramics & concrete"
+  },
+  {
+    "industry_id": "5567cdb773696439a9080000",
+    "display_name": "capital markets",
+    "cleaned_name": "capital markets"
+  },
+  {
+    "industry_id": "5567e0d87369640e5aa30c00",
+    "display_name": "semiconductors",
+    "cleaned_name": "semiconductors"
+  },
+  {
+    "industry_id": "5567e36f73696431a4970000",
+    "display_name": "animation",
+    "cleaned_name": "animation"
+  },
+  {
+    "industry_id": "5567e25f736964256cff0000",
+    "display_name": "political organization",
+    "cleaned_name": "political organization"
+  },
+  {
+    "industry_id": "5567e8bb7369641a658f0000",
+    "display_name": "package/freight delivery",
+    "cleaned_name": "package/freight delivery"
+  },
+  {
+    "industry_id": "5567e3ca736964371b130000",
+    "display_name": "wireless",
+    "cleaned_name": "wireless"
+  },
+  {
+    "industry_id": "5567e3657369642f4ec90000",
+    "display_name": "international affairs",
+    "cleaned_name": "international affairs"
+  },
+  {
+    "industry_id": "5567e28a7369642ae2500000",
+    "display_name": "public policy",
+    "cleaned_name": "public policy"
+  },
+  {
+    "industry_id": "556808697369647bfd420000",
+    "display_name": "libraries",
+    "cleaned_name": "libraries"
+  },
+  {
+    "industry_id": "5567e0cf7369641233e50600",
+    "display_name": "gambling & casinos",
+    "cleaned_name": "gambling & casinos"
+  },
+  {
+    "industry_id": "5567e14673696416d38c0300",
+    "display_name": "railroad manufacture",
+    "cleaned_name": "railroad manufacture"
+  },
+  {
+    "industry_id": "5567fd5a73696442b0f20000",
+    "display_name": "ranching",
+    "cleaned_name": "ranching"
+  },
+  {
+    "industry_id": "5567e2c572616932bb3b0000",
+    "display_name": "military",
+    "cleaned_name": "military"
+  },
+  {
+    "industry_id": "5567f96c7369642a22080000",
+    "display_name": "fishery",
+    "cleaned_name": "fishery"
+  },
+  {
+    "industry_id": "5567e2a97369642a553d0000",
+    "display_name": "supermarkets",
+    "cleaned_name": "supermarkets"
+  },
+  {
+    "industry_id": "5567e8a27369646ddb0b0000",
+    "display_name": "dairy",
+    "cleaned_name": "dairy"
+  },
+  {
+    "industry_id": "55680085736964551e070000",
+    "display_name": "tobacco",
+    "cleaned_name": "tobacco"
+  },
+  {
+    "industry_id": "5568047d7369646d406c0000",
+    "display_name": "shipbuilding",
+    "cleaned_name": "shipbuilding"
+  },
+  {
+    "industry_id": "55680a8273696407b61f0000",
+    "display_name": "judiciary",
+    "cleaned_name": "judiciary"
+  },
+  {
+    "industry_id": "5567e1a87369641f6d550100",
+    "display_name": "alternative dispute resolution",
+    "cleaned_name": "alternative dispute resolution"
+  },
+  {
+    "industry_id": "5567e7be736964110e210000",
+    "display_name": "nanotechnology",
+    "cleaned_name": "nanotechnology"
+  },
+  {
+    "industry_id": "55718f947369642142b84a12",
+    "display_name": "agriculture",
+    "cleaned_name": "agriculture"
+  },
+  {
+    "industry_id": "5567e1797369641c48c10100",
+    "display_name": "legislative office",
+    "cleaned_name": "legislative office"
+  }
+]

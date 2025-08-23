@@ -178,6 +178,13 @@ model PendingUpgrade {
   @@index([userId])
 }
 
+model Industry {
+  id             String   @id @default(cuid()) 
+  industry_id    String
+  display_name   String
+  cleaned_name   String   
+}
+
 enum AdminRole {
   SUPER_ADMIN
   ADMIN

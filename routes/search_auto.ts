@@ -1,4 +1,4 @@
-// service.ts
+// search_auto.ts
 
 import { Logs } from "@prisma/client";
 import dotenv from "dotenv";
@@ -11,7 +11,11 @@ import { getUser } from "../db/user";
 import { LeadStatusResponse } from "../types/interfaces";
 import verifySessionToken from "../middleware/supabaseAuth";
 import { request } from "http";
+import { safeParse, z } from "zod";
+import { getIndustryIds } from "../db/industry";
 dotenv.config();
+
+const app = express.Router();
 
 function checkUrl(url: string): boolean {
   const basePattern = /^https:\/\/app\.apollo\.io\/#\/people\?/;
@@ -21,7 +25,41 @@ function checkUrl(url: string): boolean {
   return basePattern.test(url) && !invalidPattern.test(url);
 }
 
-const app = express.Router();
+const searchSchema = z.object({
+  page: z.number().min(1).default(1),
+  per_page: z.number().min(1).max(100).default(100),
+  person_titles: z.array(z.string()).optional(),
+  include_similar_titles: z.boolean().optional(),
+  person_not_titles: z.array(z.string()).optional(),
+  person_locations: z.array(z.string()).optional(),
+  person_seniorities: z.array(z.string()).optional(),
+  person_department_or_subdepartments: z.array(z.string()).optional(),
+  contact_email_status_v2: z.array(z.string()).optional(),
+  organization_num_employees_ranges: z.array(z.string()).optional(),
+  sort_ascending: z.boolean().optional(),
+  sort_by_field: z.string().optional(),
+  fields: z.array(z.string()).optional(),
+  currently_using_any_of_technology_uids: z.array(z.string()).optional(),
+  q_organization_domains_list: z.array(z.string()).optional(),
+  organization_industry_display_name: z.array(z.string()).optional(),
+}).passthrough();
+
+async function handleRequest(body: any) {
+  const parsedBody = searchSchema.parse(body);
+
+  const organization_industry_display_names_list = parsedBody.organization_industry_display_name?.map(
+    (item: string) => item.trim()
+  ) ?? [];
+  // console.log("industry names list: ", organization_industry_display_names_list);
+  delete parsedBody.organization_industry_display_name;
+
+  const organization_industry_tag_ids = organization_industry_display_names_list.length > 0 ? await getIndustryIds(organization_industry_display_names_list) : []
+  return {
+    cleanedBody: parsedBody,
+    organization_industry_display_names_list: organization_industry_display_names_list,
+    organization_industry_tag_ids: organization_industry_tag_ids.length > 0 ? organization_industry_tag_ids.map((item) => item.industry_id) : []
+  };
+}
 
 app.post(
   "/search",
@@ -48,10 +86,21 @@ app.post(
       
     //   const credits = noOfLeadsNumeric;
 
-      if (!user) {
+    if (!user) {
         res.status(404).json({ message: "User not found" });
         return;
-      }
+    }
+   
+    const parsedBodySafe = searchSchema.safeParse(req.body)
+    if (!parsedBodySafe.success) {
+        res.status(400).json({
+              message: "Invalid request body",
+              errors: parsedBodySafe.error.format()
+        });
+        return;
+    }
+    // console.log("Parsed body: ", req.body.organization_industry_display_name);
+    const body = await handleRequest(req.body);
 
       // Use hybrid credit system - check total available credits
     //   const userSubscriptionCredits = user.subscriptionCredits ?? 0;
@@ -77,14 +126,16 @@ app.post(
         // headers: {
         //   "Content-Type": "application/json",
         // },
-        body: req.body ? JSON.stringify(req.body) : JSON.stringify({ page: 1, limit: 100 }),
+        body: body.organization_industry_tag_ids.length > 0 ? JSON.stringify({...body.cleanedBody,
+          organization_industry_tag_ids: body.organization_industry_tag_ids}) : JSON.stringify(body.cleanedBody),
       });
 
       if (!response.ok) {
         res.status(400).json({ message: "Failed to fetch" });
         return;
       }
-   
+      // console.log("Response received from search API", body.organization_industry_tag_ids.length, body.organization_industry_tag_ids, body.organization_industry_tag_ids.length > 0 ? JSON.stringify({...body.cleanedBody,
+      //     organization_industry_tag_ids: body.organization_industry_tag_ids}) : JSON.stringify(body.cleanedBody));
       const data = await response.json();
 
     //   const deductionResult = await deductCredits(userID, credits);
