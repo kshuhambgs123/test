@@ -27,6 +27,7 @@ app.post(
       }
 
       const credits = process.env.RegistrationCredits as string;
+      const searchCredits = process.env.Searchcredits as string;
       const user = await createUser(
         fullName,
         companyName,
@@ -36,7 +37,8 @@ app.post(
         email,
         parseFloat(credits),
         0,
-        heardFrom
+        heardFrom,
+        parseFloat(searchCredits)
       );
       if (!user) {
         res.status(500).json({ message: "Failed to create user" });

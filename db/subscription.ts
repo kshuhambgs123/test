@@ -259,3 +259,57 @@ export async function deductCredits(
     return { success: false, remainingCredits: 0 };
   }
 }
+
+export async function deductSearchCredits(
+  userId: string,
+  creditsToDeduct: number
+): Promise<{ success: boolean; remainingCredits: number }> {
+  try {
+    const user = await prisma.user.findUnique({
+      where: { UserID: userId },
+    });
+
+    if (!user) {
+      return { success: false, remainingCredits: 0 };
+    }
+
+    const totalCredits = user.searchCredits ?? 0;
+
+    if (totalCredits < creditsToDeduct) {
+      return { success: false, remainingCredits: totalCredits };
+    }
+
+    // Deduct from search credits 
+    let remainingToDeduct = creditsToDeduct;
+    let newSearchCredits = user.searchCredits ?? 0;
+    // let newPurchasedCredits = user.credits;
+
+    if (newSearchCredits >= remainingToDeduct) {
+      newSearchCredits -= remainingToDeduct;
+    } 
+    // else {
+    //   remainingToDeduct -= newSubscriptionCredits;
+    //   newSubscriptionCredits = 0;
+    //   newPurchasedCredits -= remainingToDeduct;
+    // }
+
+    await prisma.user.update({
+      where: { UserID: userId },
+      data: {
+        searchCredits: newSearchCredits,
+        searchCreditsUsed: {
+          increment: creditsToDeduct,
+        },
+      },
+    });
+
+    return {
+      success: true,
+      remainingCredits: newSearchCredits,
+      // remainingCredits: newSubscriptionCredits + newPurchasedCredits,
+    };
+  } catch (error: any) {
+    console.error("Error deducting credits:", error);
+    return { success: false, remainingCredits: 0 };
+  }
+}

@@ -11,7 +11,8 @@ export async function createUser(
   email: string,
   credits: number,
   subscriptionCredits: number,
-  heardFrom: string
+  heardFrom: string,
+  searchCredits: number,
 ): Promise<User | null> {
   try {
     const user = await prisma.user.create({
@@ -26,6 +27,7 @@ export async function createUser(
         subscriptionCredits: subscriptionCredits,
         apikey: v4(),
         heardFrom: heardFrom,
+        searchCredits: searchCredits || 0,
       },
     });
 

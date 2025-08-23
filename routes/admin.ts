@@ -435,6 +435,37 @@ app.post(
   }
 );
 
+app.post(
+  "/changeSearchcredits",
+  adminVerification,
+  async (req: ChangeEnrichPriceRequest, res: Response) => {
+    try {
+      const { newPrice } = req.body;
+      if (isNaN(newPrice) || !newPrice) {
+        throw new Error("Invalid price value");
+      }
+
+      process.env.Searchcredits = newPrice.toString();
+
+      const envFilePath = path.resolve(__dirname, "../../.env");
+      if (!fs.existsSync(envFilePath)) {
+        throw new Error(".env file not found");
+      }
+
+      let envFileContent = fs.readFileSync(envFilePath, "utf8");
+      const newEnvFileContent = envFileContent.replace(
+        /(^|\n)Searchcredits=.*/,
+        `$1Searchcredits= ${newPrice}`
+      );
+      fs.writeFileSync(envFilePath, newEnvFileContent);
+
+      res.status(200).json({ resp: "Updated searchcredits credits" });
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  }
+);
+
 app.get(
   "/getRegistrationCredits",
   adminVerification,
@@ -445,6 +476,21 @@ app.get(
         throw new Error("No price set");
       }
       res.status(200).json({ resp: process.env.RegistrationCredits });
+    } catch (error: any) {
+      res.status(404).json({ error: error.message });
+    }
+  }
+);
+
+app.get(
+  "/getSearchcredits",
+  adminVerification,
+  async (req: Request, res: Response) => {
+    try {
+      if (!process.env.Searchcredits) {
+        throw new Error("No price set");
+      }
+      res.status(200).json({ resp: process.env.Searchcredits });
     } catch (error: any) {
       res.status(404).json({ error: error.message });
     }

@@ -6,7 +6,7 @@ import express, { Request, Response } from "express";
 import formdata from "form-data";
 import { updateCredits } from "../db/admin";
 import { createLogOnly, updateLog } from "../db/log";
-import { deductCredits } from "../db/subscription";
+import { deductCredits, deductSearchCredits } from "../db/subscription";
 import { getUser } from "../db/user";
 import { LeadStatusResponse } from "../types/interfaces";
 import verifySessionToken from "../middleware/supabaseAuth";
@@ -71,67 +71,72 @@ app.post(
       const userID = (req as any).user.id;
       const user = await getUser(userID);
 
-    //   const { apolloLink, noOfLeads, fileName } = req.body;
-
-    //    if (!apolloLink || !noOfLeads || !fileName) {
-    //     res.status(400).json({ message: "Missing required fields" });
-    //     return;
-    //   }
-
-    //   const noOfLeadsNumeric = parseInt(noOfLeads);
-    //   if (
-    //     noOfLeadsNumeric <= 0
-    //   ) {
-    //     res.status(400).json({ message: "Invalid number of leads" });
-    //     return;
-    //   }
-      
-    //   const credits = noOfLeadsNumeric;
-
-    if (!user) {
+      if (!user) {
         res.status(404).json({ message: "User not found" });
         return;
-    }
-   
-    const parsedBodySafe = searchSchema.safeParse(req.body)
-    if (!parsedBodySafe.success) {
-        // console.log("Validation errors: ", parsedBodySafe.error.format());
+      }
+
+      const parsedBodySafe = searchSchema.safeParse(req.body)
+      if (!parsedBodySafe.success) {
+          // console.log("Validation errors: ", parsedBodySafe.error.format());
+          res.status(400).json({
+            message: "Invalid request body",
+            errors: parsedBodySafe.error.format(),
+          });
+          return;
+      }
+      // console.log("Parsed body: ", req.body.organization_industry_display_name);
+      const body = await handleRequest(req.body);
+
+      // ---------------- CREDIT ENFORCEMENT ----------------
+      const searchCost = 1;
+      const userSearchCredits = user.searchCredits ?? 0;
+
+      if (userSearchCredits < searchCost) {
         res.status(400).json({
-          message: "Invalid request body",
-          errors: parsedBodySafe.error.format(),
+          message: "Free search credits exhausted.",
+          // availableCredits: {
+          //   searchCredits: userSearchCredits,
+          //   // purchasedCredits: user.credits,
+          //   // totalCredits,
+          // },
         });
         return;
       }
-    // console.log("Parsed body: ", req.body.organization_industry_display_name);
-    const body = await handleRequest(req.body);
 
-      // Use hybrid credit system - check total available credits
-    //   const userSubscriptionCredits = user.subscriptionCredits ?? 0;
-    //   const totalAvailableCredits = userSubscriptionCredits + user.credits;
-    //   if (totalAvailableCredits < credits) {
-    //     res.status(400).json({
-    //       message: "Insufficient credits",
-    //       availableCredits: {
-    //         subscriptionCredits: userSubscriptionCredits,
-    //         purchasedCredits: user.credits,
-    //         totalCredits: totalAvailableCredits,
-    //       },
-    //     });
-    //     return;
-    //   }
+       // Deduct credits
+      const deductionResult = await deductSearchCredits(userID, searchCost);
+      if (!deductionResult.success) {
+          res.status(400).json({ message: "Failed to deduct credits" });
+          return;
+      }
 
-    //   const dns = process.env.DNS as string;
+      // const newLog = await createLogOnly(
+      //     data.record_id,
+      //     userID,
+      //     searchCost,
+      //     0,
+      //     ,
+      //     fileName,
+      //     searchCost,
+      //     "url",
+      //     user.name,
+      //     user.email
+      //   );
+
+      // Log credit transaction
+      // await createCreditTransaction({
+      //   user_id: userID,
+      //   type: "search_deduct",
+      //   amount: searchCost,
+      //   reason: "Sample search query",
+      //   direction: "debit",
+      // });
+
+
+      // ---------------- CALL SEARCH API ----------------
 
       const searchAPI = process.env.SAMPLESEARCHAUTOMATIONAPI as string;
-
-      // const response = await fetch(searchAPI, {
-      //   method: "POST",
-      //   headers: {
-      //     "Content-Type": "application/json",
-      //   },
-      //   body: body.organization_industry_tag_ids.length > 0 ? JSON.stringify({...body.cleanedBody,
-      //     organization_industry_tag_ids: body.organization_industry_tag_ids}) : JSON.stringify(body.cleanedBody),
-      // });
 
       const finalBody = body.organization_industry_tag_ids.length > 0
         ? { ...body.cleanedBody, organization_industry_tag_ids: body.organization_industry_tag_ids }
@@ -152,6 +157,12 @@ app.post(
       res.status(200).json({
           message: `People fetched successfully`,
           data: response.data,
+        //   balance: {
+        //   subscriptionCredits: updatedUser?.subscriptionCredits ?? 0,
+        //   purchasedCredits: updatedUser?.credits ?? 0,
+        //   totalCredits:
+        //     (updatedUser?.subscriptionCredits ?? 0) + (updatedUser?.credits ?? 0),
+        // },
       });
       return;
 
