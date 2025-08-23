@@ -13,6 +13,7 @@ import verifySessionToken from "../middleware/supabaseAuth";
 import { request } from "http";
 import { safeParse, z } from "zod";
 import { getIndustryIds } from "../db/industry";
+import axios from "axios";
 dotenv.config();
 
 const app = express.Router();
@@ -42,11 +43,12 @@ const searchSchema = z.object({
   currently_using_any_of_technology_uids: z.array(z.string()).optional(),
   q_organization_domains_list: z.array(z.string()).optional(),
   organization_industry_display_name: z.array(z.string()).optional(),
+  organization_locations: z.array(z.string()).optional(),
 }).passthrough();
 
 async function handleRequest(body: any) {
   const parsedBody = searchSchema.parse(body);
-
+  
   const organization_industry_display_names_list = parsedBody.organization_industry_display_name?.map(
     (item: string) => item.trim()
   ) ?? [];
@@ -93,12 +95,13 @@ app.post(
    
     const parsedBodySafe = searchSchema.safeParse(req.body)
     if (!parsedBodySafe.success) {
+        // console.log("Validation errors: ", parsedBodySafe.error.format());
         res.status(400).json({
-              message: "Invalid request body",
-              errors: parsedBodySafe.error.format()
+          message: "Invalid request body",
+          errors: parsedBodySafe.error.format(),
         });
         return;
-    }
+      }
     // console.log("Parsed body: ", req.body.organization_industry_display_name);
     const body = await handleRequest(req.body);
 
@@ -121,22 +124,36 @@ app.post(
 
       const searchAPI = process.env.SAMPLESEARCHAUTOMATIONAPI as string;
 
-      const response = await fetch(searchAPI, {
-        method: "POST",
-        // headers: {
-        //   "Content-Type": "application/json",
-        // },
-        body: body.organization_industry_tag_ids.length > 0 ? JSON.stringify({...body.cleanedBody,
-          organization_industry_tag_ids: body.organization_industry_tag_ids}) : JSON.stringify(body.cleanedBody),
+      // const response = await fetch(searchAPI, {
+      //   method: "POST",
+      //   headers: {
+      //     "Content-Type": "application/json",
+      //   },
+      //   body: body.organization_industry_tag_ids.length > 0 ? JSON.stringify({...body.cleanedBody,
+      //     organization_industry_tag_ids: body.organization_industry_tag_ids}) : JSON.stringify(body.cleanedBody),
+      // });
+
+      const finalBody = body.organization_industry_tag_ids.length > 0
+        ? { ...body.cleanedBody, organization_industry_tag_ids: body.organization_industry_tag_ids }
+        : body.cleanedBody;
+      
+      const headers = {
+          "Content-Type": "application/json",
+      };
+      
+      const response = await axios.post(searchAPI, finalBody, {
+        headers,
       });
 
-      if (!response.ok) {
-        res.status(400).json({ message: "Failed to fetch" });
-        return;
+      if (response.status !== 200) {
+        throw new Error("Failed to fetch");
       }
-      // console.log("Response received from search API", body.organization_industry_tag_ids.length, body.organization_industry_tag_ids, body.organization_industry_tag_ids.length > 0 ? JSON.stringify({...body.cleanedBody,
-      //     organization_industry_tag_ids: body.organization_industry_tag_ids}) : JSON.stringify(body.cleanedBody));
-      const data = await response.json();
+      
+      res.status(200).json({
+          message: `People fetched successfully`,
+          data: response.data,
+      });
+      return;
 
     //   const deductionResult = await deductCredits(userID, credits);
     //   if (!deductionResult.success) {
@@ -175,8 +192,8 @@ app.post(
     //     additionalInformation = "Used bought credits.";
     //   }
 
-      res.status(200).json({
-        message: `People fetched successfully`,
+      // res.status(200).json({
+      //   message: `People fetched successfully`,
         // balance: {
         //   subscriptionCredits: updatedUser.subscriptionCredits ?? 0,
         //   purchasedCredits: updatedUser.credits,
@@ -185,8 +202,8 @@ app.post(
         // },
         // additional_information: additionalInformation,
         // log: newLog,
-        data: data
-      });
+      //   data: data
+      // });
 
     //   setImmediate(async () => {
     //     console.log("Checking lead status for logID: ", newLog?.LogID);

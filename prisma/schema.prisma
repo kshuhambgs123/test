@@ -185,6 +185,20 @@ model Industry {
   cleaned_name   String   
 }
 
+model Department {
+  id          String        @id @default(cuid())
+  name        String
+  jobFunctions JobFunction[]
+}
+
+model JobFunction {
+  id           String     @id @default(cuid())
+  name         String
+  departmentId String
+  department   Department @relation(fields: [departmentId], references: [id])
+}
+
+
 enum AdminRole {
   SUPER_ADMIN
   ADMIN

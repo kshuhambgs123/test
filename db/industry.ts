@@ -1,9 +1,18 @@
 import { Industry } from "@prisma/client";
 import { prisma } from "./index";
 
-export async function getIndustryList(): Promise<any[]> {
+export async function getIndustryList(search?: string): Promise<any[]> {
   try {
-    const industry = await prisma.industry.findMany({ select: {
+    const industry = await prisma.industry.findMany({
+        where: search
+         ? {
+            display_name: {
+              contains: search,
+              mode: "insensitive",
+            },
+          }
+         : undefined,
+        select: {
         id: true,
         display_name: true,
     }});
@@ -33,7 +42,7 @@ export async function getIndustryIds(parameter : any): Promise<any[]> {
     if (!industry) {
       return [];
     }
-    console.log("industry ids: ", industry);
+    // console.log("industry ids: ", industry);
     return industry;
   } catch (error: any) {
     throw new Error(error.message);

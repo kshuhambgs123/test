@@ -1,0 +1,266 @@
+[
+  {
+    "name": "C-Suite",
+    "children": [
+      { "name": "Executive" },
+      { "name": "Finance Executive" },
+      { "name": "Founder" },
+      { "name": "Human Resources Executive" },
+      { "name": "Information Technology Executive" },
+      { "name": "Legal Executive" },
+      { "name": "Marketing Executive" },
+      { "name": "Medical & Health Executive" },
+      { "name": "Operations Executive" },
+      { "name": "Sales Leader" }
+    ]
+  },
+  {
+    "name": "Product",
+    "children": [
+      { "name": "Product Development" },
+      { "name": "Product Management" },
+      { "name": "Engineering & Technical" },
+      { "name": "Artificial Intelligence / Machine Learning" },
+      { "name": "Bioengineering" },
+      { "name": "Biometrics" },
+      { "name": "Business Intelligence" },
+      { "name": "Chemical Engineering" },
+      { "name": "Cloud / Mobility" },
+      { "name": "Data Science" },
+      { "name": "DevOps" },
+      { "name": "Digital Transformation" },
+      { "name": "Emerging Technology / Innovation" }
+    ]
+  },
+  {
+    "name": "Engineering & Technical",
+    "children": [
+      { "name": "Industrial Engineering" },
+      { "name": "Mechanic" },
+      { "name": "Mobile Development" },
+      { "name": "Project Management" },
+      { "name": "Research & Development" },
+      { "name": "Scrum Master / Agile Coach" },
+      { "name": "Software Development" },
+      { "name": "Support / Technical Services" },
+      { "name": "Technician" },
+      { "name": "Technology Operations" },
+      { "name": "Test / Quality Assurance" },
+      { "name": "UI / UX" },
+      { "name": "Web Development" }
+    ]
+  },
+  {
+    "name": "Design",
+    "children": [
+      { "name": "All Design" },
+      { "name": "Product or UI/UX Design" },
+      { "name": "Graphic / Visual / Brand Design" }
+    ]
+  },
+  {
+    "name": "Education",
+    "children": [
+      { "name": "Teacher" },
+      { "name": "Principal" },
+      { "name": "Superintendent" },
+      { "name": "Professor" }
+    ]
+  },
+  {
+    "name": "Finance",
+    "children": [
+      { "name": "Accounting" },
+      { "name": "Finance" },
+      { "name": "Financial Planning & Analysis" },
+      { "name": "Financial Reporting" },
+      { "name": "Financial Strategy" },
+      { "name": "Financial Systems" },
+      { "name": "Internal Audit & Control" },
+      { "name": "Investor Relations" },
+      { "name": "Mergers & Acquisitions" },
+      { "name": "Real Estate Finance" },
+      { "name": "Financial Risk" },
+      { "name": "Shared Services" },
+      { "name": "Sourcing / Procurement" },
+      { "name": "Tax" },
+      { "name": "Treasury" }
+    ]
+  },
+  {
+    "name": "Human Resources",
+    "children": [
+      { "name": "Compensation & Benefits" },
+      { "name": "Culture, Diversity & Inclusion" },
+      { "name": "Employee & Labor Relations" },
+      { "name": "Health & Safety" },
+      { "name": "Human Resource Information System" },
+      { "name": "Human Resources" },
+      { "name": "HR Business Partner" },
+      { "name": "Learning & Development" },
+      { "name": "Organizational Development" },
+      { "name": "Recruiting & Talent Acquisition" },
+      { "name": "Talent Management" },
+      { "name": "Workforce Management" },
+      { "name": "People Operations" }
+    ]
+  },
+  {
+    "name": "Information Technology",
+    "children": [
+      { "name": "Application Development" },
+      { "name": "Business Service Management / ITSM" },
+      { "name": "Collaboration & Web App" },
+      { "name": "Data Center" },
+      { "name": "Data Warehouse" },
+      { "name": "Database Administration" },
+      { "name": "eCommerce Development" },
+      { "name": "Enterprise Architecture" },
+      { "name": "Help Desk / Desktop Services" },
+      { "name": "HR / Financial / ERP Systems" },
+      { "name": "Information Security" },
+      { "name": "Information Technology" },
+      { "name": "Infrastructure" },
+      { "name": "IT Asset Management" },
+      { "name": "IT Audit / IT Compliance" },
+      { "name": "IT Operations" },
+      { "name": "IT Procurement" },
+      { "name": "IT Strategy" },
+      { "name": "IT Training" },
+      { "name": "Networking" },
+      { "name": "Project & Program Management" },
+      { "name": "Quality Assurance" },
+      { "name": "Retail / Store Systems" },
+      { "name": "Servers" },
+      { "name": "Storage & Disaster Recovery" },
+      { "name": "Telecommunications" },
+      { "name": "Virtualization" }
+    ]
+  },
+  {
+    "name": "Legal",
+    "children": [
+      { "name": "Acquisitions" },
+      { "name": "Compliance" },
+      { "name": "Contracts" },
+      { "name": "Corporate Secretary" },
+      { "name": "eDiscovery" },
+      { "name": "Ethics" },
+      { "name": "Governance" },
+      { "name": "Governmental Affairs & Regulatory Law" },
+      { "name": "Intellectual Property & Patent" },
+      { "name": "Labor & Employment" },
+      { "name": "Lawyer / Attorney" },
+      { "name": "Legal Counsel" },
+      { "name": "Legal Operations" },
+      { "name": "Litigation" },
+      { "name": "Privacy" }
+    ]
+  },
+  {
+    "name": "Marketing",
+    "children": [
+      { "name": "Advertising" },
+      { "name": "Brand Management" },
+      { "name": "Content Marketing" },
+      { "name": "Customer Experience" },
+      { "name": "Customer Marketing" },
+      { "name": "Demand Generation" },
+      { "name": "Digital Marketing" },
+      { "name": "eCommerce Marketing" },
+      { "name": "Event Marketing" },
+      { "name": "Field Marketing" },
+      { "name": "Lead Generation" },
+      { "name": "Marketing" },
+      { "name": "Marketing Analytics / Insights" },
+      { "name": "Marketing Communications" },
+      { "name": "Marketing Operations" },
+      { "name": "Product Marketing" },
+      { "name": "Public Relations" },
+      { "name": "Search Engine Optimization / Pay Per Click" },
+      { "name": "Social Media Marketing" },
+      { "name": "Strategic Communications" },
+      { "name": "Technical Marketing" }
+    ]
+  },
+  {
+    "name": "Medical & Health",
+    "children": [
+      { "name": "Anesthesiology" },
+      { "name": "Chiropractics" },
+      { "name": "Clinical Systems" },
+      { "name": "Dentistry" },
+      { "name": "Dermatology" },
+      { "name": "Doctors / Physicians" },
+      { "name": "Epidemiology" },
+      { "name": "First Responder" },
+      { "name": "Infectious Disease" },
+      { "name": "Medical Administration" },
+      { "name": "Medical Education & Training" },
+      { "name": "Medical Research" },
+      { "name": "Medicine" },
+      { "name": "Neurology" },
+      { "name": "Nursing" },
+      { "name": "Nutrition & Dietetics" },
+      { "name": "Obstetrics / Gynecology" },
+      { "name": "Oncology" },
+      { "name": "Opthalmology" },
+      { "name": "Optometry" },
+      { "name": "Orthopedics" },
+      { "name": "Pathology" },
+      { "name": "Pediatrics" },
+      { "name": "Pharmacy" },
+      { "name": "Physical Therapy" },
+      { "name": "Psychiatry" },
+      { "name": "Psychology" },
+      { "name": "Public Health" },
+      { "name": "Radiology" },
+      { "name": "Social Work" }
+    ]
+  },
+  {
+    "name": "Operations",
+    "children": [
+      { "name": "Call Center" },
+      { "name": "Construction" },
+      { "name": "Corporate Strategy" },
+      { "name": "Customer Service / Support" },
+      { "name": "Enterprise Resource Planning" },
+      { "name": "Facilities Management" },
+      { "name": "Leasing" },
+      { "name": "Logistics" },
+      { "name": "Office Operations" },
+      { "name": "Physical Security" },
+      { "name": "Project Development" },
+      { "name": "Quality Management" },
+      { "name": "Real Estate" },
+      { "name": "Safety" },
+      { "name": "Store Operations" },
+      { "name": "Supply Chain" }
+    ]
+  },
+  {
+    "name": "Sales",
+    "children": [
+      { "name": "Account Management" },
+      { "name": "Business Development" },
+      { "name": "Channel Sales" },
+      { "name": "Customer Retention & Development" },
+      { "name": "Customer Success" },
+      { "name": "Field / Outside Sales" },
+      { "name": "Inside Sales" },
+      { "name": "Partnerships" },
+      { "name": "Revenue Operations" },
+      { "name": "Sales Enablement" },
+      { "name": "Sales Engineering" },
+      { "name": "Sales Operations" },
+      { "name": "Sales Training" }
+    ]
+  },
+  {
+    "name": "Consulting",
+    "children": [
+      { "name": "Consultant" }
+    ]
+  }
+]
