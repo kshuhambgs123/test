@@ -50,8 +50,8 @@ app.post('/webhook',async (req, res) => {
           log_id,
           req.body.status,
           req.body.google_sheet,
-          req.body.valid_email_count,
-          req.body.number_of_leads_found
+          parseInt(req.body.valid_email_count),
+          parseInt(req.body.number_of_leads_found)
         );
         if (!logsExport) {
           return;
