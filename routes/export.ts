@@ -42,7 +42,7 @@ app.post(
       }
 
       const noOfLeadsNumeric = parseInt(noOfLeads);
-
+  
       if (
         noOfLeadsNumeric <= 0
       ) {
@@ -51,9 +51,9 @@ app.post(
       }
 
       if (
-        noOfLeadsNumeric < 1000 ||
-        noOfLeadsNumeric > 50000 ||
-        noOfLeadsNumeric % 1000 !== 0
+        noOfLeadsNumeric < 100 ||
+        noOfLeadsNumeric > 50000 
+        // || noOfLeadsNumeric % 1000 !== 0
       ) {
         res.status(400).json({ message: "Invalid number of leads" });
         return;
