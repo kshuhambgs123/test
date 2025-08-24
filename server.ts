@@ -10,13 +10,14 @@ const envFile = process.env.NODE_ENV === "test" ? ".env.test" : ".env";
 dotenv.config({ path: envFile });
 
 const app = express();
-app.use(express.json()); 
-app.use(cors());
 
 app.use(
   "/api/payments/searchLeadsConfirmPayment",
   express.raw({ type: "application/json" })
 );
+
+app.use(express.json()); 
+app.use(cors());
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));

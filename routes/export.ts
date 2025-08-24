@@ -28,10 +28,10 @@ function checkUrl(url: string): boolean {
 app.post(
   "/create",
   // apiauth,
-   verifySessionToken,
+  //  verifySessionToken,
   async (req: Request, res: Response): Promise<void> => {
     try {
-      const userID = (req as any).user.id;
+      const userID = '98473053-364f-4edf-beee-72461bfc2b12'; // (req as any).user.id;
       const user = await getUser(userID);
       console.log("User:came ");
       const { filter, noOfLeads, fileName } = req.body;
