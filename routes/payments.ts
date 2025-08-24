@@ -43,11 +43,16 @@ app.post("/searchLeadsConfirmPayment", async (req: Request, res: Response) => {
     let event: Stripe.Event;
 
     try {
+      console.log("Raw body type:", typeof req.body, Buffer.isBuffer(req.body));
+
       event = stripeClient.webhooks.constructEvent(
         req.body,
         sig,
         endpointSecret
       );
+
+      console.log("Event :", event);
+
       eventId = event.id;
     } catch (err) {
       console.error("Webhook signature verification failed:", err);
