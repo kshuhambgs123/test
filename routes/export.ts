@@ -12,6 +12,7 @@ import apiauth from "../middleware/apiAuth";
 import { LeadStatusResponse } from "../types/interfaces";
 import { v4 } from "uuid";
 import axios from "axios";
+import verifySessionToken from "../middleware/supabaseAuth";
 dotenv.config();
 
 const app = express.Router();
@@ -26,7 +27,8 @@ function checkUrl(url: string): boolean {
 
 app.post(
   "/create",
-  apiauth,
+  // apiauth,
+   verifySessionToken,
   async (req: Request, res: Response): Promise<void> => {
     try {
       const userID = (req as any).user.UserID;
