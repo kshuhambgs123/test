@@ -14,7 +14,7 @@ app.get(
   verifySessionToken,
   async (req: Request, res: Response): Promise<void> => {
     try {
-      const userID = (req as any).user.id;
+      const userID = (req as any).user.id; 
       const user = await getUser(userID);
 
       if (!user) {
@@ -27,7 +27,7 @@ app.get(
       const industry = await getIndustryList(search);
 
       if (!industry || industry.length === 0) {
-        res.status(404).json({ message: "No industries found" });
+        res.status(404).json({ message: "No industries found" , industry: [] });
         return;
       }
 

@@ -1,9 +1,32 @@
-import { Department, JobFunction } from "@prisma/client";
+import { Department, JobFunction, Prisma } from "@prisma/client";
 import { prisma } from "./index";
 
-export async function getDepartmentList(): Promise<any[]> {
+export async function getDepartmentList(search?: string): Promise<any[]> {
   try {
-    const departments = await prisma.department.findMany({
+    const whereClause = search
+      ? {
+          OR: [
+            {
+              name: {
+                contains: search,
+                mode: Prisma.QueryMode.insensitive, 
+              },
+            },
+            {
+              jobFunctions: {
+                some: {
+                  name: {
+                    contains: search,
+                    mode: Prisma.QueryMode.insensitive,
+                  },
+                },
+              },
+            },
+          ],
+        }
+      : {};
+      const departments = await prisma.department.findMany({
+      where: whereClause,
       include: {
         jobFunctions: {
           select: {

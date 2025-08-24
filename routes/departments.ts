@@ -22,22 +22,37 @@ app.get(
         return;
       }
 
-    //   const search = req.query.search as string | undefined;
+      const search = req.query.search as string | undefined;
 
-      const departments = await getDepartmentList();
+      const departments = await getDepartmentList(search);
 
       if (!departments || departments.length === 0) {
-        res.status(404).json({ message: "No departments found" });
+        res.status(404).json({ message: "No departments found" , department: [] });
         return;
       }
 
-      const department = departments.map((dept) => ({
-        id: dept.id,
-        name: dept.name,
-        children: dept.jobFunctions,
-       } ));
+      const filteredDepartments = departments.map((dept) => {
 
-      res.status(200).json({ department });
+        const deptName = dept.name.toLowerCase();
+        const deptMatches = search ? deptName.includes(search) : true;
+
+        const filteredChildren = dept.jobFunctions.filter((job: any) => {
+            if (!search) return true;
+            const regex = new RegExp(search, "i");
+            return regex.test(job.name);       
+        });
+
+        const children =
+          !search || deptMatches ? dept.jobFunctions : filteredChildren;
+
+        return {
+          id: dept.id,
+          name: dept.name,
+          children,
+        };
+      });
+
+      res.status(200).json({ department : filteredDepartments });
     } catch (error: any) {
       console.error("Error fetching logs:", error);
       res.status(500).json({ message: error.message });
