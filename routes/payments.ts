@@ -3,7 +3,7 @@
 import userAuth from "../middleware/supabaseAuth";
 import express, { Request, Response } from "express";
 import Stripe from "stripe";
-import { addCredits, getUser } from "../db/user";
+import { addCredits, addCreditsWithSearchCredits, getUser } from "../db/user";
 import { stripeClient } from "../payments/stripe";
 import {
   getSubscriptionTiers,
@@ -28,6 +28,7 @@ import { makeUpstashRequest } from "../caching/redis";
 
 const app = express.Router();
 const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET as string;
+const percentageOfCredits = process.env.PERCENTAGE as string ? process.env.PERCENTAGE as string : "10";
 
 app.post("/searchLeadsConfirmPayment", express.raw({ type: "application/json" }), async (req: Request, res: Response) => {
   let eventId: string | null = null;
@@ -141,8 +142,9 @@ app.post("/searchLeadsConfirmPayment", express.raw({ type: "application/json" })
               } (Charge: ${paymentIntent.latest_charge})`
             );
 
-            const updatedCredits = await addCredits(
+            const updatedCredits = await addCreditsWithSearchCredits(
               parseFloat(metadata.credits),
+              parseFloat(parseInt(percentageOfCredits) ? ((parseFloat(metadata.credits) * parseInt(percentageOfCredits)) / 100).toString() : "0"),
               metadata.userId
             );
 

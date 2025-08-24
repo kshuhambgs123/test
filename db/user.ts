@@ -85,6 +85,45 @@ export async function addCredits(
   }
 }
 
+export async function addCreditsWithSearchCredits(
+  addCreds: number,
+  searchCreds: number,
+  userId: string
+): Promise<User | null> {
+  try {
+    let data = await prisma.user.findUnique({
+      where: {
+        UserID: userId,
+      },
+    });
+
+    if (!data) {
+      return null;
+    }
+
+    data = await prisma.user.update({
+      where: {
+        UserID: userId,
+      },
+      data: {
+        credits: {
+          increment: Math.abs(addCreds),
+        },
+        searchCredits: {
+          increment: Math.abs(searchCreds),
+        },
+        TotalCreditsBought: {
+          increment: Math.abs(addCreds),
+        },
+      },
+    });
+
+    return data;
+  } catch (error: any) {
+    throw new Error(error.message);
+  }
+}
+
 export async function refreshAPIKey(userID: string): Promise<User | null> {
   try {
     const user = await prisma.user.update({
