@@ -31,7 +31,7 @@ app.post(
    verifySessionToken,
   async (req: Request, res: Response): Promise<void> => {
     try {
-      const userID = (req as any).user.UserID;
+      const userID = (req as any).user.id;
       const user = await getUser(userID);
       console.log("User:came ");
       const { filter, noOfLeads, fileName } = req.body;
