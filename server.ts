@@ -50,8 +50,8 @@ app.post('/webhook',async (req, res) => {
           log_id,
           req.body.status,
           req.body.google_sheet,
-          req.body.valid_email_count
-          // req.body.no_of_leads_found
+          req.body.valid_email_count,
+          req.body.number_of_leads_found
         );
         if (!logsExport) {
           return;
@@ -71,7 +71,7 @@ app.post('/webhook',async (req, res) => {
           const refundState = await updateCreditsRefunded(logsExport.userID, creditsToRefund);
           if (!refundState) {
             console.error("❌ Failed to refund credits for user:", logsExport.userID);
-            return res.status(500).send("Refund failed");
+            // return res.status(500).send("Refund failed");
           }
         }
     }
