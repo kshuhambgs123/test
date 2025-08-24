@@ -29,7 +29,7 @@ import { makeUpstashRequest } from "../caching/redis";
 const app = express.Router();
 const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET as string;
 
-app.post("/searchLeadsConfirmPayment", async (req: Request, res: Response) => {
+app.post("/searchLeadsConfirmPayment", express.raw({ type: "application/json" }), async (req: Request, res: Response) => {
   let eventId: string | null = null;
 
   console.log("-------- INSIDE /searchLeadsConfirmPayment --------");
@@ -43,7 +43,7 @@ app.post("/searchLeadsConfirmPayment", async (req: Request, res: Response) => {
     let event: Stripe.Event;
 
     try {
-      console.log("Raw body type:", typeof req.body, Buffer.isBuffer(req.body));
+      console.log("Raw body type:",req.body, typeof req.body, Buffer.isBuffer(req.body));
 
       event = stripeClient.webhooks.constructEvent(
         req.body,
