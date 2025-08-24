@@ -119,6 +119,62 @@ export async function updateCredits(userID: string, credits: number) {
   return updatedData;
 }
 
+export async function updateCreditsRefunded(userID: string, credits: number) {
+  const data = await prisma.user.findUnique({
+    where: {
+      UserID: userID,
+    },
+  });
+
+  if (!data) {
+    return null;
+  }
+
+  const updatedCredits = data.credits + credits;
+
+  if (updatedCredits < 0) {
+    return "negative";
+  }
+
+  let updatedData;
+
+  if (credits > 0) {
+    updatedData = await prisma.user.update({
+      where: {
+        UserID: userID,
+      },
+      data: {
+        refundCredits: credits,
+        credits: updatedCredits,
+        TotalCreditsBought: {
+          increment: credits,
+        },
+      },
+    });
+  } else if (credits < 0) {
+    updatedData = await prisma.user.update({
+      where: {
+        UserID: userID,
+      },
+      data: {
+        refundCredits: credits,
+        credits: updatedCredits,
+        TotalCreditsUsed: {
+          increment: Math.abs(credits),
+        },
+      },
+    });
+  } else {
+    return null;
+  }
+
+  if (!updatedData) {
+    return null;
+  }
+
+  return updatedData;
+}
+
 export async function getUserById(userID: string) {
   const data = await prisma.user.findUnique({
     where: {

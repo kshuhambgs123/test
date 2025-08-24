@@ -30,6 +30,7 @@ model Logs {
   date           DateTime
   email          String?
   name           String?
+  valid_email_count Int?
   user           User     @relation(fields: [userID], references: [UserID])
 }
 

@@ -3,6 +3,8 @@ import cors from "cors";
 import bodyParser from "body-parser";
 import dotenv from "dotenv";
 import routes from "./routes/index";
+import { updateLogByWebhook } from "./db/log";
+import { updateCreditsRefunded } from "./db/admin";
 
 const envFile = process.env.NODE_ENV === "test" ? ".env.test" : ".env";
 dotenv.config({ path: envFile });
@@ -34,18 +36,46 @@ app.get("/health", async (req: Request, res: Response, next: NextFunction) => {
 });
 
 
-//
-app.post('/webhook', (req, res) => {
+app.post('/webhook',async (req, res) => {
     console.log('🔔 Webhook received:');
-    const { client_id, ...rest } = req.body;
+    const { log_id } = req.body;
 
-    console.log('📌 client_id:', client_id);
-    console.log('📦 Other data:', rest);
+    console.log('📌 client_id:', log_id);
+    // console.log('📦 Other data:', rest);
 
-    // console.log(req.body);  // This is the incoming data
+     if (
+        req.body.status == "completed" 
+      ) {
+        const logsExport = await updateLogByWebhook(
+          log_id,
+          req.body.status,
+          req.body.google_sheet,
+          req.body.valid_email_count
+          // req.body.no_of_leads_found
+        );
+        if (!logsExport) {
+          return;
+        }
 
-    // Respond quickly to acknowledge receipt
-    res.status(200).send('✅ Received');
+        // We charge 1 credit per valid email, and +2 for each personal mobile if available
+        const validEmails = req.body.valid_email_count ?? 0;
+        const mobilesFound = req.body.personal_mobiles_found ?? 0;
+        const creditsUsed = validEmails + mobilesFound * 2;
+
+        const reservedCredits = logsExport.creditsUsed;
+
+        // Refund any unused credits
+        const creditsToRefund = reservedCredits - creditsUsed;
+
+        if (creditsToRefund > 0) {
+          const refundState = await updateCreditsRefunded(logsExport.userID, creditsToRefund);
+          if (!refundState) {
+            console.error("❌ Failed to refund credits for user:", logsExport.userID);
+            return res.status(500).send("Refund failed");
+          }
+        }
+    }
+    res.status(200).send('✅ Webhook received');
 });
 
 // Catch 404 for unknown routes

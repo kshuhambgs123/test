@@ -9,6 +9,7 @@ import paymentRoutes from "./payments";
 import sampleSearchRoutes from "./search_auto";
 import industryRoutes from "./industry";
 import departmentRoutes from "./departments";
+import exportRoutes from "./export";
 
 const app = express.Router();
 
@@ -22,5 +23,6 @@ app.use("/payments", paymentRoutes);
 app.use("/people", sampleSearchRoutes);
 app.use("/industry", industryRoutes);
 app.use("/departments", departmentRoutes);
+app.use("/export", exportRoutes);
 
 export default app;

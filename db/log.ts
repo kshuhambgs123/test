@@ -119,6 +119,43 @@ export async function updateLog(
   }
 }
 
+
+export async function updateLogByWebhook(
+  logID: string,
+  status: string,
+  url: string,
+  valid_email_count: number
+  // leadsEnriched: number
+): Promise<Logs | null> {
+  try {
+    const existingLog = await prisma.logs.findUnique({
+      where: {
+        LogID: logID,
+      },
+    });
+
+    if (!existingLog) {
+      return null;
+    }
+
+    const log = await prisma.logs.update({
+      where: {
+        LogID: logID,
+      },
+      data: {
+        status: status,
+        url: url,
+        valid_email_count: valid_email_count
+        // leadsEnriched: leadsEnriched,
+      },
+    });
+
+    return log;
+  } catch (error: any) {
+    throw new Error(error.message);
+  }
+}
+
 export async function createCompleteLog(
   logID: string,
   userID: string,
