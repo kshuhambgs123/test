@@ -33,6 +33,21 @@ app.get("/health", async (req: Request, res: Response, next: NextFunction) => {
   }
 });
 
+
+//
+app.post('/webhook', (req, res) => {
+    console.log('🔔 Webhook received:');
+    const { client_id, ...rest } = req.body;
+
+    console.log('📌 client_id:', client_id);
+    console.log('📦 Other data:', rest);
+
+    // console.log(req.body);  // This is the incoming data
+
+    // Respond quickly to acknowledge receipt
+    res.status(200).send('✅ Received');
+});
+
 // Catch 404 for unknown routes
 app.use((req: Request, res: Response) => {
   res.status(404).json({
@@ -41,6 +56,7 @@ app.use((req: Request, res: Response) => {
   });
 });
 
+//
 // Global error handling middleware
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {
   console.error("Global error handler:", err);
