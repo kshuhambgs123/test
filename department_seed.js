@@ -1,5 +1,4 @@
   const { PrismaClient } = require('@prisma/client');
-  const { DataBrew } = require('aws-sdk');
   const fs = require('fs');
   
   const prisma = new PrismaClient();

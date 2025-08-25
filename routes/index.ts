@@ -10,6 +10,7 @@ import sampleSearchRoutes from "./search_auto";
 import industryRoutes from "./industry";
 import departmentRoutes from "./departments";
 import exportRoutes from "./export";
+import technologyRoutes from "./technology";
 
 const app = express.Router();
 
@@ -22,6 +23,7 @@ app.use("/billing", billingRoutes);
 app.use("/payments", paymentRoutes);
 app.use("/people", sampleSearchRoutes);
 app.use("/industry", industryRoutes);
+app.use("/technology", technologyRoutes);
 app.use("/departments", departmentRoutes);
 app.use("/export", exportRoutes);
 
