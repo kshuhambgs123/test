@@ -27,7 +27,7 @@ app.get(
       const industry = await getIndustryList(search);
 
       if (!industry || industry.length === 0) {
-        res.status(404).json({ message: "No industries found" , industry: [] });
+        res.status(200).json({ message: "No industries found" , industry: [] });
         return;
       }
 

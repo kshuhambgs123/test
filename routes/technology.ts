@@ -28,7 +28,7 @@ app.get(
       const technology = await getTechnologyList(search);
 
       if (!technology || technology.length === 0) {
-        res.status(404).json({ message: "No technologies found" , technology: [] });
+        res.status(200).json({ message: "No technologies found" , technology: [] });
         return;
       }
 

@@ -27,7 +27,7 @@ app.get(
       const departments = await getDepartmentList(search);
 
       if (!departments || departments.length === 0) {
-        res.status(404).json({ message: "No departments found" , department: [] });
+        res.status(200).json({ message: "No departments found" , department: [] });
         return;
       }
 

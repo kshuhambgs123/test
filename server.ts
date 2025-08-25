@@ -44,6 +44,12 @@ app.post('/webhook',async (req, res) => {
     console.log('📌 client_id:', log_id);
     // console.log('📦 Other data:', rest);
 
+      // We charge 1 credit per valid email, and +2 for each personal mobile if available
+     const validEmails = req.body.valid_email_count ?? 0;
+     const mobilesFound = req.body.personal_mobiles_found ?? 0;
+     const creditsUsed = validEmails + mobilesFound * 2;
+
+
      if (
         req.body.status == "completed" 
       ) {
@@ -52,18 +58,14 @@ app.post('/webhook',async (req, res) => {
           req.body.status,
           req.body.google_sheet,
           parseInt(req.body.valid_email_count),
-          parseInt(req.body.number_of_leads_found)
+          parseInt(req.body.number_of_leads_found),
+          parseInt(creditsUsed)
         );
         if (!logsExport) {
           return;
         }
 
-        // We charge 1 credit per valid email, and +2 for each personal mobile if available
-        const validEmails = req.body.valid_email_count ?? 0;
-        const mobilesFound = req.body.personal_mobiles_found ?? 0;
-        const creditsUsed = validEmails + mobilesFound * 2;
-
-        const reservedCredits = logsExport.creditsUsed;
+        const reservedCredits = logsExport.creditsUsed; //  parseFloat(req.body.leads_count);
 
         // Refund any unused credits
         const creditsToRefund = reservedCredits - creditsUsed;

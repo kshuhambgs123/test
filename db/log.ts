@@ -125,7 +125,8 @@ export async function updateLogByWebhook(
   status: string,
   url: string,
   valid_email_count: number,
-  leadsEnriched: number
+  leadsEnriched: number,
+  creditsUsed: number
 ): Promise<Logs | null> {
   try {
     const existingLog = await prisma.logs.findUnique({
@@ -147,6 +148,7 @@ export async function updateLogByWebhook(
         url: url,
         valid_email_count: valid_email_count,
         leadsEnriched: leadsEnriched,
+        creditsUsed: creditsUsed,
       },
     });
 
