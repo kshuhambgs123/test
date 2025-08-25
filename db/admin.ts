@@ -176,7 +176,10 @@ export async function updateCreditsForOneAmongAll(userID: string, credits: numbe
           UserID: userID,
         },
         data: {
-          searchCredits: updatedSearchCredits,
+        // searchCredits: updatedSearchCredits,
+        searchCredits: {
+          increment: Math.abs(updatedSearchCredits),
+        },
         },
       });
     } 

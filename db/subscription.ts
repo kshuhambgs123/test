@@ -163,7 +163,12 @@ export async function updateUserSubscriptionWithTimestamp(
 
     const user = await prisma.user.update({
       where: { UserID: userId },
-      data: dbData,
+      data: {
+        ...dbData,
+        searchCredits: { 
+          increment: Math.abs(dbData.searchCredits ?? 0) 
+        },
+      },
     });
 
     console.log(
@@ -185,7 +190,9 @@ export async function resetMonthlyCredits(
       where: { UserID: userId },
       data: {
         subscriptionCredits: credits,
-        searchCredits: parseFloat(((credits * percentageOfCredits) / 100).toString()),
+        searchCredits: {
+         increment: Math.abs(parseFloat(((credits * percentageOfCredits) / 100).toString())),
+        },
         TotalCreditsBought: { increment: credits },
       },
     });
