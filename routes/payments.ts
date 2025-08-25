@@ -25,6 +25,8 @@ import {
 } from "../utils/webhookIdempotency";
 import { deletePendingUpgrade, getPendingUpgrade } from "../db/pendingUpgrades";
 import { makeUpstashRequest } from "../caching/redis";
+import { User } from "@prisma/client";
+import { prisma } from "../db/index";
 
 const app = express.Router();
 const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET as string;
@@ -1115,6 +1117,13 @@ app.post("/createCustomer", userAuth, async (req: Request, res: Response) => {
       name: name,
       email: email,
       coupon: couponID,
+    });
+
+    const user_id = (req as any).user.id;
+
+    await prisma.user.update({
+      where: { UserID: user_id },
+      data: { stripeCustomerId: customer.id },
     });
 
     res.status(200).json({ customer });
