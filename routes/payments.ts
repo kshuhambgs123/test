@@ -30,7 +30,7 @@ import { prisma } from "../db/index";
 
 const app = express.Router();
 const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET as string;
-const percentageOfCredits = process.env.PERCENTAGE as string ? process.env.PERCENTAGE as string : "10";
+const percentageOfCredits = process.env.PERCENTAGE ? parseInt(process.env.PERCENTAGE, 10) : 10;
 
 app.post("/searchLeadsConfirmPayment", express.raw({ type: "application/json" }), async (req: Request, res: Response) => {
   let eventId: string | null = null;
@@ -146,7 +146,7 @@ app.post("/searchLeadsConfirmPayment", express.raw({ type: "application/json" })
 
             const updatedCredits = await addCreditsWithSearchCredits(
               parseFloat(metadata.credits),
-              parseFloat(parseInt(percentageOfCredits) ? ((parseFloat(metadata.credits) * parseInt(percentageOfCredits)) / 100).toString() : "0"),
+              parseFloat(((parseFloat(metadata.credits) * percentageOfCredits) / 100).toString()),
               metadata.userId
             );
 
@@ -276,7 +276,8 @@ app.post("/searchLeadsConfirmPayment", express.raw({ type: "application/json" })
                   last_webhook_timestamp: event.created,
                   last_processed_event_id: event.id,
                   upgrade_lock: false, // Clear upgrade lock
-                });
+                  searchCredits: parseFloat(((parseInt(tier.credits) * percentageOfCredits) / 100).toString()),
+                  });
 
                 console.log(
                   `✅ Completed upgrade swap for user ${subMetadata.userId}: ${
@@ -296,7 +297,8 @@ app.post("/searchLeadsConfirmPayment", express.raw({ type: "application/json" })
                   ),
                   last_webhook_timestamp: event.created,
                   last_processed_event_id: event.id,
-                });
+                  searchCredits: parseFloat(((parseInt(tier.credits) * percentageOfCredits) / 100).toString()),
+                  });
 
                 console.log(
                   `✅ Activated subscription for user ${subMetadata.userId}: ${
@@ -333,6 +335,7 @@ app.post("/searchLeadsConfirmPayment", express.raw({ type: "application/json" })
                 subscriptionStatus: "active",
                 last_webhook_timestamp: event.created,
                 last_processed_event_id: event.id,
+                searchCredits: parseFloat((((pendingUpgrade.targetCredits) * percentageOfCredits) / 100).toString()),
               });
 
               console.log(

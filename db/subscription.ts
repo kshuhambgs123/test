@@ -7,6 +7,7 @@ import {
   clearCachedTiers,
 } from "../caching/redis";
 
+const percentageOfCredits = process.env.PERCENTAGE ? parseInt(process.env.PERCENTAGE, 10) : 10;
 async function fetchDynamicTiers() {
   try {
     console.log("Fetching subscription tiers from Stripe.");
@@ -148,6 +149,7 @@ export async function updateUserSubscriptionWithTimestamp(
     last_webhook_timestamp?: number;
     last_processed_event_id?: string;
     upgrade_lock?: boolean;
+    searchCredits?: number;
   }
 ): Promise<User | null> {
   try {
@@ -183,6 +185,7 @@ export async function resetMonthlyCredits(
       where: { UserID: userId },
       data: {
         subscriptionCredits: credits,
+        searchCredits: parseFloat(((credits * percentageOfCredits) / 100).toString()),
         TotalCreditsBought: { increment: credits },
       },
     });
