@@ -167,7 +167,8 @@ export async function createCompleteLog(
   fileName: string,
   creditsUsed: number,
   url: string,
-  status: string
+  status: string,
+  valid_email_count: number
 ): Promise<Logs | null> {
   try {
     const deductResult = await deductCredits(userID, creditsUsed);
@@ -188,6 +189,7 @@ export async function createCompleteLog(
         url: url,
         status: status,
         date: new Date(),
+        valid_email_count: valid_email_count,
       },
     });
 

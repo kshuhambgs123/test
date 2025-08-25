@@ -38,6 +38,7 @@ import {
   UpdateCreditsRequest,
   ChangeEnrichPriceRequest,
   LeadStatusResponse,
+  ChangeMaintenanceRequest,
 } from "../types/interfaces";
 
 const app = express.Router();
@@ -416,7 +417,7 @@ app.post(
 
       process.env.RegistrationCredits = newPrice.toString();
 
-      const envFilePath = path.resolve(__dirname, "../../.env");
+      const envFilePath = path.resolve(__dirname, "../.env");
       if (!fs.existsSync(envFilePath)) {
         throw new Error(".env file not found");
       }
@@ -446,8 +447,8 @@ app.post(
       }
 
       process.env.Searchcredits = newPrice.toString();
-
-      const envFilePath = path.resolve(__dirname, "../../.env");
+      
+      const envFilePath = path.resolve(__dirname, "../.env");
       if (!fs.existsSync(envFilePath)) {
         throw new Error(".env file not found");
       }
@@ -460,6 +461,55 @@ app.post(
       fs.writeFileSync(envFilePath, newEnvFileContent);
 
       res.status(200).json({ resp: "Updated searchcredits credits" });
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  }
+);
+
+app.post(
+  "/changeMaintenanceMode",
+  // adminVerification,
+  async (req: ChangeMaintenanceRequest, res: Response) => {
+    try {
+      const { mode } = req.body;
+      if (!mode) {
+        throw new Error("Invalid maintenance mode");
+      }
+
+      if (mode !== "true" && mode !== "false") {
+        throw new Error("Maintenance mode must be 'true' or 'false'");
+      }
+
+      process.env.MaintenanceMode  = mode.toString();
+      
+      const envFilePath = path.resolve(__dirname, "../.env");
+      if (!fs.existsSync(envFilePath)) {
+        throw new Error(".env file not found");
+      }
+
+      let envFileContent = fs.readFileSync(envFilePath, "utf8");
+      const newEnvFileContent = envFileContent.replace(
+        /(^|\n)MaintenanceMode =.*/,
+        `$1MaintenanceMode = ${mode}`
+      );
+      fs.writeFileSync(envFilePath, newEnvFileContent);
+
+      res.status(200).json({ resp: "Updated maintenance mode " });
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  }
+);
+
+app.get(
+  "/getMaintenanceMode",
+  async (req: Request, res: Response) => {
+    try {
+    if (!process.env.MaintenanceMode ) {
+        throw new Error("Maintenance Mode not set.");
+      }
+      res.status(200).json({ resp: process.env.MaintenanceMode  });
     } catch (error: any) {
       res.status(400).json({ error: error.message });
     }
@@ -511,6 +561,7 @@ app.post(
         creditsUsed,
         url,
         status,
+        valid_email_count
       } = req.body;
 
       if (
@@ -535,7 +586,8 @@ app.post(
         fileName,
         creditsUsed,
         url,
-        status
+        status,
+        parseInt(valid_email_count)
       );
 
       if (!createCompleteLogData) {
@@ -684,7 +736,7 @@ app.post(
   adminVerification,
   async (req: Request, res: Response) => {
     try {
-      const { logID, creditsUsed, status, apollo_link, url } = req.body;
+      const { logID, creditsUsed, status, apollo_link, url , valid_email_count } = req.body;
 
       if (!logID || !status || !apollo_link) {
         res.status(400).json({ message: "Missing required fields" });
@@ -696,7 +748,8 @@ app.post(
         status,
         apollo_link,
         creditsUsed,
-        url
+        url,
+        parseInt(valid_email_count)
       );
 
       if (!UpdateLogData) {

@@ -138,6 +138,12 @@ export interface ChangeEnrichPriceRequest extends Request {
   };
 }
 
+export interface ChangeMaintenanceRequest extends Request {
+  body: {
+    mode: string;
+  };
+}
+
 export interface FormattedInvoice {
   id: string;
   type: "manual" | "subscription";

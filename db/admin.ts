@@ -119,6 +119,97 @@ export async function updateCredits(userID: string, credits: number) {
   return updatedData;
 }
 
+export async function updateCreditsForOneAmongAll(userID: string, credits: number, type: string) {
+  const data = await prisma.user.findUnique({
+    where: {
+      UserID: userID,
+    },
+  });
+
+  if (!data) {
+    return null;
+  }
+
+
+  let updatedData;
+
+  if(type == "enrich_credits"){
+    const updatedCredits = (data.credits ?? 0) + credits;
+    if (updatedCredits < 0) {
+      return "negative";
+    }
+    if (credits > 0) {
+      updatedData = await prisma.user.update({
+        where: {
+          UserID: userID,
+        },
+        data: {
+          credits: updatedCredits,
+          TotalCreditsBought: {
+            increment: credits,
+          },
+        },
+      });
+    } else if (credits < 0) {
+      updatedData = await prisma.user.update({
+        where: {
+          UserID: userID,
+        },
+        data: {
+          credits: updatedCredits,
+          TotalCreditsUsed: {
+            increment: Math.abs(credits),
+          },
+        },
+      });
+    } else {
+      return null;
+    }
+  } else if(type == "search_credits"){
+    const updatedSearchCredits = (data.searchCredits ?? 0) + credits;
+    if (updatedSearchCredits < 0) {
+      return "negative";
+    }
+    if (credits > 0) {
+      updatedData = await prisma.user.update({
+        where: {
+          UserID: userID,
+        },
+        data: {
+          searchCredits: updatedSearchCredits,
+        },
+      });
+    } 
+    else {
+    return null;
+  }
+  } else if(type == "subscription_credits"){
+    const updatedSubscriptionCredits = (data.subscriptionCredits ?? 0) + credits;
+    if (updatedSubscriptionCredits < 0) {
+      return "negative";
+    }
+    if (credits > 0) {
+      updatedData = await prisma.user.update({
+        where: {
+          UserID: userID,
+        },
+        data: {
+          subscriptionCredits: updatedSubscriptionCredits,
+        },
+      });
+    } 
+    else {
+    return null;
+  }
+  }
+
+  if (!updatedData) {
+    return null;
+  }
+
+  return updatedData;
+}
+
 export async function updateCreditsRefunded(userID: string, credits: number) {
   const data = await prisma.user.findUnique({
     where: {
@@ -224,7 +315,8 @@ export async function editLog(
   status: string,
   apollo_link: string,
   credits: number,
-  url: string
+  url: string,
+  valid_email_count: number
 ) {
   const log = await prisma.logs.findUnique({
     where: {
@@ -265,6 +357,7 @@ export async function editLog(
       apolloLink: apollo_link,
       creditsUsed: credits,
       url: url,
+      valid_email_count: valid_email_count
     },
   });
 
