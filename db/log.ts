@@ -177,6 +177,12 @@ export async function createCompleteLog(
       throw new Error("Insufficient Credits");
     }
 
+    const data = await prisma.user.findUnique({
+      where: {
+        UserID: userID,
+      },
+    });
+
     const log = await prisma.logs.create({
       data: {
         LogID: logID,
@@ -190,6 +196,8 @@ export async function createCompleteLog(
         status: status,
         date: new Date(),
         valid_email_count: valid_email_count,
+        email: data?.email || null,
+        name: data?.name || null,
       },
     });
 
