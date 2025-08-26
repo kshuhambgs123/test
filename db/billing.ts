@@ -47,7 +47,20 @@ export async function getInvoicesByUserID(
 
 export async function getAllInvoices(): Promise<BillingDetails[]> {
   try {
-    const invoice = await prisma.billingDetails.findMany();
+    // const invoice = await prisma.billingDetails.findMany();
+    const invoice = await prisma.billingDetails.findMany({
+      include: {
+        user: {
+          select: {
+            UserID: true,
+            email: true,
+            name: true,
+          },
+        },
+      },
+    });
+
+
     if (!invoice) {
       return [];
     }
