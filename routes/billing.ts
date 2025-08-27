@@ -1,8 +1,10 @@
 // billing.ts
 
 import express from "express";
+import dotenv from "dotenv";
 import {
   createInvoiceEntry,
+  createSubscriptionInvoiceEntry,
   getInvoiceByBillingID,
   getInvoicesByUserID,
 } from "../db/billing";
@@ -10,10 +12,11 @@ import s3 from "../db/s3";
 import { getUser } from "../db/user";
 import userAuth from "../middleware/supabaseAuth";
 import { stripeClient } from "../payments/stripe";
-import { createInvoice } from "../utils/createInvoice";
+import { createInvoice, createSubscriptionInvoice } from "../utils/createInvoice";
 import { FormattedInvoice, UpcomingInvoiceInfo } from "../types/interfaces";
-
+dotenv.config();
 const app = express.Router();
+ const costPerLead = parseFloat(process.env.COSTPERLEAD as string);
 
 app.post("/createInvoice", userAuth, async (req, res) => {
   try {
@@ -69,6 +72,103 @@ app.post("/createInvoice", userAuth, async (req, res) => {
     res
       .status(200)
       .json({ message: "Invoice created successfully", invoice: uploadedInvoice.Location });
+  } catch (e: any) {
+    res.status(500).json({ message: e.message });
+  }
+});
+
+app.post("/createSubscriptionInvoice", userAuth, async (req, res) => {
+  try {
+    const userID = (req as any).user.id;
+    const user = await getUser(userID);
+    
+    if (!user) {
+      res.status(404).json({ message: "User not found" });
+      return;
+    }
+
+    if (!user.stripeCustomerId || !user.stripeSubscriptionId) {
+      res.status(400).json({ message: "No active Stripe subscription found" });
+      return;
+    }
+
+    // Fetch the latest paid invoice for the subscription
+    const invoices = await stripeClient.invoices.list({
+      customer: user.stripeCustomerId,
+      subscription: user.stripeSubscriptionId,
+      limit: 1,
+      status: "paid",
+      expand: ['data.subscription_details'], 
+    });
+    
+
+    if (!invoices.data.length) {
+      res.status(404).json({ message: "No paid subscription invoice found" });
+      return;
+    }
+
+    const invoice = invoices.data[0];
+    // console.log("Fetched invoice from Stripe:", invoices.data[0]);
+
+    const metadata = invoice.subscription_details?.metadata || invoice.metadata || {};
+
+    // Optionally, log/store the invoice in your DB
+    const invoiceData = await createSubscriptionInvoice(
+      invoice.account_name || '',
+      invoice.customer_name || user.name || '',
+      invoice.currency.toUpperCase(),
+      metadata?.credits ? (parseInt(metadata.credits)/1000) * costPerLead : 0,
+      metadata?.tierName || '',
+      invoice.status || '',
+      invoice.customer_email || '',
+      invoice.customer_name || '',
+      invoice.issuer?.type || '',
+      'Subscription',
+      invoice.customer_address?.line1 || '',
+      invoice.customer_phone || '',
+    );
+
+    // console.log("User for subscription invoice:", invoiceData);
+
+    if (!invoiceData) throw new Error("Invoice generation failed");    
+    
+    const time = new Date().getTime();
+    const fileName = `${invoice.account_name}-${userID}-${time}.pdf`;
+    const param = {
+      Bucket: "SearchleadsInvoices",
+      Key: fileName,
+      Body: invoiceData,
+      // ACL: "public-read",
+      ContentType: "application/pdf",
+    };
+
+    const uploadedInvoice = await s3.upload(param).promise();
+    if (!uploadedInvoice) {
+      res.status(500).json({ message: "Invoice not uploaded" });
+      return;
+    }
+
+    const invoiceLog = await createSubscriptionInvoiceEntry(
+      userID,
+      uploadedInvoice.ETag.replace(/"/g, ""),
+      uploadedInvoice.Location,
+      metadata?.credits ? parseInt(metadata.credits) : 0,
+      metadata?.tierName || '',
+      invoice.status || '',
+      invoice.customer_email || '',
+      invoice.customer_name || '',
+      invoice.issuer?.type || '',
+      'Subscription'
+    );
+    
+    if (!invoiceLog) {
+      res.status(500).json({ message: "Invoice logging failed" });
+      return;
+    }
+
+    res
+      .status(200)
+      .json({ message: "Subscription invoice created successfully", invoice: uploadedInvoice.Location });
   } catch (e: any) {
     res.status(500).json({ message: e.message });
   }

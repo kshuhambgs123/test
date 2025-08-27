@@ -10,6 +10,32 @@ export interface InvoiceData {
   notes: string;
   currency: string;
   amount_paid: string;
+  "custom_fields[0][name]": string,
+  "custom_fields[0][value]": string,
+}
+
+export interface InvoiceSubscriptionData {
+  from: string;
+  to: string;
+  logo: string;
+  number: string;
+  date: string;
+  "items[0][name]": string;
+  "items[0][quantity]": string;
+  "items[0][unit_cost]": string;
+  notes: string;
+  currency: string;
+  amount_paid: string;
+  "custom_fields[0][name]": string,
+  "custom_fields[0][value]": string,
+  "custom_fields[1][name]": string;
+  "custom_fields[1][value]": string,
+  "custom_fields[2][name]": string,
+  "custom_fields[2][value]": string,
+  "custom_fields[3][name]": string,
+  "custom_fields[3][value]": string,
+  "custom_fields[4][name]": string,
+  "custom_fields[4][value]": string,
 }
 
 export interface StripePaymentMetadata {

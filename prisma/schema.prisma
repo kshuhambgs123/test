@@ -14,6 +14,12 @@ model BillingDetails {
   Url              String
   CreditsRequested Int
   date             DateTime
+  tierName         String?  
+  status           String?  
+  customer_email   String? 
+  customer_name    String?  
+  issuer_type      String?
+  subscription_type String? 
   user             User     @relation(fields: [userID], references: [UserID])
 }
 
