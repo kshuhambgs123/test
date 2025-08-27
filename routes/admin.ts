@@ -484,9 +484,9 @@ app.post(
       process.env.MaintenanceMode  = mode.toString();
       
       const envFilePath = path.resolve(__dirname, "../.env");
-      if (!fs.existsSync(envFilePath)) {
-        throw new Error(".env file not found");
-      }
+      // if (!fs.existsSync(envFilePath)) {
+      //   throw new Error(".env file not found");
+      // }
 
       let envFileContent = fs.readFileSync(envFilePath, "utf8");
       const newEnvFileContent = envFileContent.replace(
