@@ -52,7 +52,7 @@ export async function createSubscriptionInvoiceEntry(
         tierName: tierName,
         status: status,  
         customer_email: customer_email, 
-        customer_name: customer_email, 
+        customer_name: customer_name, 
         issuer_type: issuer_type,
         subscription_type: subscription_type,
         date: new Date(),
