@@ -78,7 +78,7 @@ app.post("/createInvoice", userAuth, async (req, res) => {
 });
 
 // app.post("/createSubscriptionInvoice", userAuth, async (req, res) => {
-export async function createSubscriptionInvoiceFromWebhook(userId: string): Promise<void> {
+export async function createSubscriptionInvoiceFromWebhook(userId: string, id: string): Promise<void> {
   try {
     const userID = userId;
     const user = await getUser(userID);
@@ -89,7 +89,7 @@ export async function createSubscriptionInvoiceFromWebhook(userId: string): Prom
       return;
     }
 
-    if (!user.stripeCustomerId || !user.stripeSubscriptionId) {
+    if (!user.stripeCustomerId || !id) {
       // res.status(400).json({ message: "No active Stripe subscription found" });
       console.error("No active Stripe subscription found");
       return;
@@ -98,7 +98,7 @@ export async function createSubscriptionInvoiceFromWebhook(userId: string): Prom
     // Fetch the latest paid invoice for the subscription
     const invoices = await stripeClient.invoices.list({
       customer: user.stripeCustomerId,
-      subscription: user.stripeSubscriptionId,
+      subscription: id,
       limit: 1,
       status: "paid",
       expand: ['data.subscription_details'], 
