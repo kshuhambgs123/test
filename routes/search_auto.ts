@@ -43,6 +43,7 @@ const searchSchema = z.object({
   currently_using_any_of_technology_uids: z.array(z.string()).optional(),
   q_organization_domains_list: z.array(z.string()).optional(),
   organization_industry_display_name: z.array(z.string()).optional(),
+  organization_industry_not_display_name: z.array(z.string()).optional(),
   organization_locations: z.array(z.string()).optional(),
 }).passthrough();
 
@@ -55,11 +56,20 @@ async function handleRequest(body: any) {
   // console.log("industry names list: ", organization_industry_display_names_list);
   delete parsedBody.organization_industry_display_name;
 
-  const organization_industry_tag_ids = organization_industry_display_names_list.length > 0 ? await getIndustryIds(organization_industry_display_names_list) : []
+  const organization_industry_tag_ids = organization_industry_display_names_list.length > 0 ? await getIndustryIds(organization_industry_display_names_list) : [];
+
+  const organization_industry_not_display_names_list = parsedBody.organization_industry_not_display_name?.map(
+    (item: string) => item.trim()
+  ) ?? [];
+  // console.log("industry names list to exclude : ", organization_industry_not_display_names_list);
+  delete parsedBody.organization_industry_not_display_name;
+  
+  const organization_not_industry_tag_ids = organization_industry_not_display_names_list.length > 0 ? await getIndustryIds(organization_industry_not_display_names_list) : [];
   return {
     cleanedBody: parsedBody,
     organization_industry_display_names_list: organization_industry_display_names_list,
-    organization_industry_tag_ids: organization_industry_tag_ids.length > 0 ? organization_industry_tag_ids.map((item) => item.industry_id) : []
+    organization_industry_tag_ids: organization_industry_tag_ids.length > 0 ? organization_industry_tag_ids.map((item) => item.industry_id) : [],
+    organization_not_industry_tag_ids: organization_not_industry_tag_ids.length > 0 ? organization_not_industry_tag_ids.map((item) => item.industry_id) : [],
   };
 }
 

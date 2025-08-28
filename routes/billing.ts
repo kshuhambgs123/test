@@ -77,18 +77,21 @@ app.post("/createInvoice", userAuth, async (req, res) => {
   }
 });
 
-app.post("/createSubscriptionInvoice", userAuth, async (req, res) => {
+// app.post("/createSubscriptionInvoice", userAuth, async (req, res) => {
+export async function createSubscriptionInvoiceFromWebhook(userId: string): Promise<void> {
   try {
-    const userID = (req as any).user.id;
+    const userID = userId;
     const user = await getUser(userID);
     
     if (!user) {
-      res.status(404).json({ message: "User not found" });
+      console.error("User not found");
+      // res.status(404).json({ message: "User not found" });
       return;
     }
 
     if (!user.stripeCustomerId || !user.stripeSubscriptionId) {
-      res.status(400).json({ message: "No active Stripe subscription found" });
+      // res.status(400).json({ message: "No active Stripe subscription found" });
+      console.error("No active Stripe subscription found");
       return;
     }
 
@@ -103,7 +106,8 @@ app.post("/createSubscriptionInvoice", userAuth, async (req, res) => {
     
 
     if (!invoices.data.length) {
-      res.status(404).json({ message: "No paid subscription invoice found" });
+      console.error("No paid subscription invoice found");
+      // res.status(404).json({ message: "No paid subscription invoice found" });
       return;
     }
 
@@ -130,7 +134,11 @@ app.post("/createSubscriptionInvoice", userAuth, async (req, res) => {
 
     // console.log("User for subscription invoice:", invoiceData);
 
-    if (!invoiceData) throw new Error("Invoice generation failed");    
+    if (!invoiceData) {
+      // throw new Error("Invoice generation failed");
+      console.error("Invoice generation failed");
+      return;
+    }    
     
     const time = new Date().getTime();
     const fileName = `${invoice.account_name}-${userID}-${time}.pdf`;
@@ -144,7 +152,8 @@ app.post("/createSubscriptionInvoice", userAuth, async (req, res) => {
 
     const uploadedInvoice = await s3.upload(param).promise();
     if (!uploadedInvoice) {
-      res.status(500).json({ message: "Invoice not uploaded" });
+      // res.status(500).json({ message: "Invoice not uploaded" });
+       console.error("Invoice not uploaded");
       return;
     }
 
@@ -162,17 +171,22 @@ app.post("/createSubscriptionInvoice", userAuth, async (req, res) => {
     );
     
     if (!invoiceLog) {
-      res.status(500).json({ message: "Invoice logging failed" });
+      console.error("Invoice logging failed");
+      // res.status(500).json({ message: "Invoice logging failed" });
       return;
     }
 
-    res
-      .status(200)
-      .json({ message: "Subscription invoice created successfully", invoice: uploadedInvoice.Location });
+    // res
+    //   .status(200)
+    //   .json({ message: "Subscription invoice created successfully", invoice: uploadedInvoice.Location });
+
+     console.log("Subscription invoice created successfully:", uploadedInvoice.Location);
+
   } catch (e: any) {
-    res.status(500).json({ message: e.message });
+    // res.status(500).json({ message: e.message });
+    console.error("Error in createSubscriptionInvoice:", e.message || e);
   }
-});
+};
 
 app.get("/getBillsByUser", userAuth, async (req, res) => {
   try {

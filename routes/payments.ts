@@ -4,6 +4,7 @@ import userAuth from "../middleware/supabaseAuth";
 import express, { Request, Response } from "express";
 import Stripe from "stripe";
 import { addCredits, addCreditsWithSearchCredits, getUser } from "../db/user";
+import { createSubscriptionInvoiceFromWebhook } from './billing';
 import { stripeClient } from "../payments/stripe";
 import {
   getSubscriptionTiers,
@@ -219,6 +220,15 @@ app.post("/searchLeadsConfirmPayment", express.raw({ type: "application/json" })
                 invoice.amount_paid / 100
               }`
             );
+            const subscription = await stripeClient.subscriptions.retrieve(
+              invoice.subscription as string
+            );
+            const subMetadata =
+              subscription.metadata as unknown as SubscriptionMetadata;
+            if (subMetadata?.userId) {  
+              console.log(`✅ Invoice logged called for user ${subMetadata.userId}`);
+             const invoiceLogged =  await createSubscriptionInvoiceFromWebhook(subMetadata.userId);
+            }
           } else {
             console.error(
               `❌ Payment verification failed: status=${invoice.status}, amount=${invoice.amount_paid}`
