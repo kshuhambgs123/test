@@ -1,6 +1,6 @@
 // admin.ts
 
-import { Logs } from "@prisma/client";
+import { LogsV2 } from "@prisma/client";
 import express, { Request, Response } from "express";
 import fs from "fs";
 import path from "path";
@@ -630,7 +630,7 @@ app.post(
 
       setImmediate(async () => {
         console.log("Checking lead status for logID: ", log?.LogID);
-        const resp = await checkLeadStatus(log as Logs);
+        const resp = await checkLeadStatus(log as LogsV2);
         console.log("Lead status checked for logID: ", log?.LogID);
       });
     } catch (error: any) {
@@ -639,7 +639,7 @@ app.post(
   }
 );
 
-async function checkLeadStatus(log: Logs) {
+async function checkLeadStatus(log: LogsV2) {
   const leadStatusAPI = process.env.SEARCHAUTOMATIONAPISTATUS as string;
 
   try {

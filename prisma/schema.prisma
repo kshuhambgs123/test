@@ -36,8 +36,27 @@ model Logs {
   date           DateTime
   email          String?
   name           String?
+
+  user           User     @relation(fields: [userID], references: [UserID])
+
+}
+
+model LogsV2 {
+  LogID          String   @id @unique
+  userID         String
+  leadsRequested Int
+  leadsEnriched  Int?
+  apolloLink     String
+  fileName       String
+  creditsUsed    Float
+  url            String?
+  status         String
+  date           DateTime
+  email          String?
+  name           String?
   valid_email_count Int?
   user           User     @relation(fields: [userID], references: [UserID])
+
 }
 
 model User {
@@ -75,6 +94,7 @@ model User {
   BillingDetails               BillingDetails[]
   CreditTransaction            CreditTransaction[]
   logs                         Logs[]
+  LogsV2                       LogsV2[]
   PendingUpgrade               PendingUpgrade[]
   Subscription                 Subscription[]
 }
@@ -83,13 +103,13 @@ model Admin {
   email       String     @unique
   password    String
   createdAt   DateTime   @default(now())
-  id          String     @id @unique
-  isActive    Boolean    @default(true)
-  lastLoginAt DateTime?
-  name        String
-  permissions Json?
-  role        AdminRole  @default(ADMIN)
-  updatedAt   DateTime
+  id          String     @id  @default(uuid())
+  isActive    Boolean?   @default(true)
+  lastLoginAt DateTime?    
+  name        String?
+  permissions Json?          
+  role        AdminRole?  @default(ADMIN)
+  updatedAt   DateTime?  @default(now())
   AuditLog    AuditLog[]
 }
 

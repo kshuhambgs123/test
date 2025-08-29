@@ -281,7 +281,7 @@ export async function getUserById(userID: string) {
 
 export async function getLogsByUserID(userID: string) {
   try {
-    const data = await prisma.logs.findMany({
+    const data = await prisma.logsV2.findMany({
       where: {
         userID: userID,
       },
@@ -292,7 +292,7 @@ export async function getLogsByUserID(userID: string) {
     // Attempt to reconnect
     await prisma.$disconnect();
     // Retry once
-    return await prisma.logs.findMany({
+    return await prisma.logsV2.findMany({
       where: {
         userID: userID,
       },
@@ -321,7 +321,7 @@ export async function editLog(
   url: string,
   valid_email_count: number
 ) {
-  const log = await prisma.logs.findUnique({
+  const log = await prisma.logsV2.findUnique({
     where: {
       LogID: logID,
     },
@@ -351,7 +351,7 @@ export async function editLog(
     }
   }
 
-  const data = await prisma.logs.update({
+  const data = await prisma.logsV2.update({
     where: {
       LogID: logID,
     },

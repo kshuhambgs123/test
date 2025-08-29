@@ -1,6 +1,6 @@
 // export.ts
 
-import { Logs, User } from "@prisma/client";
+import { LogsV2, User } from "@prisma/client";
 import dotenv from "dotenv";
 import express, { Request, Response } from "express";
 import formdata from "form-data";
