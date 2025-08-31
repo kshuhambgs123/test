@@ -156,9 +156,10 @@ app.post(
       
       const response = await axios.post(searchAPI, finalBody, {
         headers,
+        timeout: 20000, // 20 seconds
       });
 
-      if (response.status !== 200) {
+      if (!response || response.status !== 200) {
         throw new Error("Failed to fetch");
       }
       
