@@ -119,7 +119,7 @@ export async function updateCredits(userID: string, credits: number) {
   return updatedData;
 }
 
-export async function updateCreditsForOneAmongAll(userID: string, credits: number, type: string) {
+export async function updateCreditsForOneAmongAll(userID: string, credits: number, type?: string) {
   const data = await prisma.user.findUnique({
     where: {
       UserID: userID,
@@ -290,7 +290,7 @@ export async function getLogsByUserID(userID: string) {
   } catch (error) {
     console.error("Database error:", error);
     // Attempt to reconnect
-    await prisma.$disconnect();
+    // await prisma.$disconnect();
     // Retry once
     return await prisma.logsV2.findMany({
       where: {

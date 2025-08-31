@@ -18,6 +18,7 @@ import {
   revokeAPIkey,
   tokenVerify,
   updateCredits,
+  updateCreditsForOneAmongAll,
 } from "../db/admin";
 import { getAllInvoices, getInvoiceByBillingID } from "../db/billing";
 import {
@@ -329,9 +330,11 @@ app.post(
   async (req: UpdateCreditsRequest, res: Response) => {
     //TESTED
     try {
-      const { userID, credits } = req.body;
+      const { userID, credits , type} = req.body;
 
-      const resp = await updateCredits(userID, credits);
+      // const resp = await updateCredits(userID, credits);
+      // const resp = await updateCredits(userID, credits);
+      const resp = await updateCreditsForOneAmongAll(userID, credits, type);
       if (resp === "negative") {
         throw new Error("Credits cannot be negative");
       }
