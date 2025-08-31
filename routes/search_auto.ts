@@ -148,9 +148,7 @@ app.post(
 
       const searchAPI = process.env.SAMPLESEARCHAUTOMATIONAPI as string;
 
-      const finalBody = body.organization_industry_tag_ids.length > 0
-        ? { ...body.cleanedBody, organization_industry_tag_ids: body.organization_industry_tag_ids }
-        : body.cleanedBody;
+      const finalBody = { ...body.cleanedBody, organization_industry_tag_ids: body.organization_industry_tag_ids , organization_not_industry_tag_ids: body.organization_not_industry_tag_ids};
       
       const headers = {
           "Content-Type": "application/json",

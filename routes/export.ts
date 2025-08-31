@@ -13,6 +13,8 @@ import { LeadStatusResponse } from "../types/interfaces";
 import { v4 } from "uuid";
 import axios from "axios";
 import verifySessionToken from "../middleware/supabaseAuth";
+import { safeParse, z } from "zod";
+import { getIndustryIds } from "../db/industry";
 dotenv.config();
 
 const app = express.Router();
@@ -25,6 +27,54 @@ function checkUrl(url: string): boolean {
   return basePattern.test(url) && !invalidPattern.test(url);
 }
 
+const searchSchema = z.object({
+  page: z.number().min(1).default(1),
+  per_page: z.number().min(1).max(100).default(100),
+  person_titles: z.array(z.string()).optional(),
+  include_similar_titles: z.boolean().optional(),
+  person_not_titles: z.array(z.string()).optional(),
+  person_locations: z.array(z.string()).optional(),
+  person_seniorities: z.array(z.string()).optional(),
+  person_department_or_subdepartments: z.array(z.string()).optional(),
+  contact_email_status_v2: z.array(z.string()).optional(),
+  organization_num_employees_ranges: z.array(z.string()).optional(),
+  sort_ascending: z.boolean().optional(),
+  sort_by_field: z.string().optional(),
+  fields: z.array(z.string()).optional(),
+  currently_using_any_of_technology_uids: z.array(z.string()).optional(),
+  q_organization_domains_list: z.array(z.string()).optional(),
+  organization_industry_display_name: z.array(z.string()).optional(),
+  organization_industry_not_display_name: z.array(z.string()).optional(),
+  organization_locations: z.array(z.string()).optional(),
+}).passthrough();
+
+async function handleRequest(body: any) {
+  const parsedBody = searchSchema.parse(body);
+  
+  const organization_industry_display_names_list = parsedBody.organization_industry_display_name?.map(
+    (item: string) => item.trim()
+  ) ?? [];
+  // console.log("industry names list: ", organization_industry_display_names_list);
+  delete parsedBody.organization_industry_display_name;
+
+  const organization_industry_tag_ids = organization_industry_display_names_list.length > 0 ? await getIndustryIds(organization_industry_display_names_list) : [];
+
+  const organization_industry_not_display_names_list = parsedBody.organization_industry_not_display_name?.map(
+    (item: string) => item.trim()
+  ) ?? [];
+  // console.log("industry names list to exclude : ", organization_industry_not_display_names_list);
+  delete parsedBody.organization_industry_not_display_name;
+  
+  const organization_not_industry_tag_ids = organization_industry_not_display_names_list.length > 0 ? await getIndustryIds(organization_industry_not_display_names_list) : [];
+  return {
+    cleanedBody: parsedBody,
+    organization_industry_display_names_list: organization_industry_display_names_list,
+    organization_industry_tag_ids: organization_industry_tag_ids.length > 0 ? organization_industry_tag_ids.map((item) => item.industry_id) : [],
+    organization_not_industry_tag_ids: organization_not_industry_tag_ids.length > 0 ? organization_not_industry_tag_ids.map((item) => item.industry_id) : [],
+  };
+}
+
+
 app.post(
   "/create",
   // apiauth,
@@ -35,6 +85,10 @@ app.post(
       const user = await getUser(userID);
       console.log("User:came ");
       const { filter, noOfLeads, fileName } = req.body;
+
+      const body = await handleRequest(filter);
+      
+      const finalBodyFilter = { ...body.cleanedBody, organization_industry_tag_ids: body.organization_industry_tag_ids , organization_not_industry_tag_ids: body.organization_not_industry_tag_ids};
 
       if (!filter || !noOfLeads || !fileName) {
         res.status(400).json({ message: "Missing required fields" });
@@ -121,7 +175,7 @@ app.post(
       // Final request body
       const finalBody = {
         apollo_query: {
-            ...filter,
+            ...finalBodyFilter,
             per_page: 100,
             page: 1,
         },
