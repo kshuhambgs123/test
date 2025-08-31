@@ -110,6 +110,8 @@ app.post(
       if (req.body.noOfLeadsNumeric) extraFields.number_of_leads_found = req.body.number_of_leads_found;
       if (req.body.fileName) extraFields.file = req.body.fileName;
       if (noOfLeadsNumeric) extraFields.leads_count = noOfLeadsNumeric;
+      if(user.email) extraFields.email = user.email;
+      else extraFields.email = "";
       
       // if (req.body.status) extraFields.status = req.body.status;
       // if (req.body.google_sheet) extraFields.google_sheet = req.body.google_sheet;

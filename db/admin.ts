@@ -259,7 +259,9 @@ export async function updateCreditsRefunded(userID: string, credits: number) {
         UserID: userID,
       },
       data: {
-        refundCredits: credits,
+        refundCredits: { 
+          increment: credits,
+        },
         credits: updatedCredits,
         TotalCreditsBought: {
           increment: credits,
@@ -272,7 +274,9 @@ export async function updateCreditsRefunded(userID: string, credits: number) {
         UserID: userID,
       },
       data: {
-        refundCredits: credits,
+        refundCredits:{
+          decrement: credits,
+        },
         credits: updatedCredits,
         TotalCreditsUsed: {
           increment: Math.abs(credits),
