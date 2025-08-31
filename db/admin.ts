@@ -182,7 +182,19 @@ export async function updateCreditsForOneAmongAll(userID: string, credits: numbe
         // },
         },
       });
-    } 
+    } else if (credits < 0) {
+      updatedData = await prisma.user.update({
+        where: {
+          UserID: userID,
+        },
+        data: {
+          searchCredits: updatedSearchCredits,
+          searchCreditsUsed: {
+            increment: Math.abs(credits),
+          },
+        },
+      });
+    }
     else {
     return null;
   }
@@ -200,7 +212,16 @@ export async function updateCreditsForOneAmongAll(userID: string, credits: numbe
           subscriptionCredits: updatedSubscriptionCredits,
         },
       });
-    } 
+    } else if (credits < 0) {
+      updatedData = await prisma.user.update({
+        where: {
+          UserID: userID,
+        },
+        data: {
+          subscriptionCredits: updatedSubscriptionCredits,
+        },
+      });
+    }
     else {
     return null;
   }
