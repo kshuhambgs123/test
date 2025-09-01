@@ -860,12 +860,19 @@ app.post(
         `---------------- Canceling subscription: ${subscriptionId} for user: ${userId ? userId : user_id}`
       );
 
-      const canceledSubscription = await stripeClient.subscriptions.cancel(
-        subscriptionId,
-        {
-          prorate: false,
-          invoice_now: false,
-        }
+      // const canceledSubscription = await stripeClient.subscriptions.cancel(
+      //   subscriptionId,
+      //   {
+      //     prorate: false,
+      //     invoice_now: false,
+      //   }
+      // );
+
+      const canceledAtPeriodEnd = await stripeClient.subscriptions.update(
+          subscriptionId,
+          {
+            cancel_at_period_end: true,
+          }
       );
 
       console.log(
@@ -873,7 +880,7 @@ app.post(
       );
 
       res.status(200).json({
-        subscription: canceledSubscription,
+        subscription: canceledAtPeriodEnd,
         message: "Subscription canceled successfully",
       });
     } catch (error: any) {
