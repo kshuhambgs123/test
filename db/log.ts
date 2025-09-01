@@ -1,4 +1,4 @@
-import { LogsV2 } from "@prisma/client";
+import { Logs, LogsV2 } from "@prisma/client";
 import { prisma } from "./index";
 import { deductCredits } from "./subscription";
 
@@ -66,6 +66,19 @@ export async function getAllLogs(): Promise<LogsV2[]> {
     throw new Error(error.message);
   }
 }
+
+export async function getAllV1Logs(): Promise<any> {
+    try {
+        const logs = await prisma.logs.findMany();
+        if (!logs) {
+            return [];
+        }
+        return logs;
+    } catch (error: any) {
+        throw new Error(error.message);
+    }
+}
+
 
 //getone
 

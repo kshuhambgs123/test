@@ -25,6 +25,7 @@ import {
   createCompleteLog,
   getAllLogs,
   getAllLogsByUserID,
+  getAllV1Logs,
   getOneLog,
   updateLog,
 } from "../db/log";
@@ -406,6 +407,19 @@ app.get(
     }
   }
 );
+
+app.get("/getAllV1Logs", /*adminVerification,*/ async (req: Request, res: Response) => {  //TESTED
+    try {
+        const data = await getAllV1Logs()
+
+        if (!data) {
+            throw new Error("failed to find logs");
+        }
+        res.status(200).json({ data });
+    } catch (error: any) {
+        res.status(400).json({ "message": error.message });
+    }
+});
 
 app.post(
   "/changeRegistrationCredits",
