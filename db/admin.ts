@@ -262,7 +262,9 @@ export async function updateCreditsRefunded(userID: string, credits: number) {
         refundCredits: { 
           increment: credits,
         },
-        credits: updatedCredits,
+        credits: {
+          increment: credits,
+        },
         TotalCreditsBought: {
           increment: credits,
         },
