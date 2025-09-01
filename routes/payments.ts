@@ -498,46 +498,20 @@ app.post("/searchLeadsConfirmPayment", express.raw({ type: "application/json" })
             );
 
             if (user && user.stripeSubscriptionId === deletedSub.id) {
-              // This was their current subscription, cancel it with credit expires at subscription end
-              const currentTime = new Date();
-              const subscriptionEndDate = new Date(user.subscriptionCurrentPeriodEnd ?? new Date());
-
-               // If the subscription has already ended or is ending soon, expire the credits
-              if (subscriptionEndDate <= currentTime) {
-                await updateUserSubscription(delMetadata.userId, {
+              console.log(
+                `🎯 Processing cancellation of current subscription ${deletedSub.id} for user ${delMetadata.userId}`
+              );
+              await updateUserSubscription(delMetadata.userId, {
                   subscriptionStatus: null,
                   stripeSubscriptionId: null,
                   subscriptionPlan: null,
                   subscriptionCurrentPeriodEnd: null,
                   subscriptionCredits: 0,  // Expire credits when subscription ends
-                });
+              });
 
                 console.log(
-                  `✅ Expired credits and canceled subscription for user ${delMetadata.userId} | Canceled subscription id :${deletedSub.id}`
+                  `✅ Expired credits at subscription end and canceled subscription for user ${delMetadata.userId} | Canceled subscription id :${deletedSub.id}`
                 );
-              } 
-              else {
-                // If subscription is still active, just remove subscription details but keep credits
-                await updateUserSubscription(delMetadata.userId, {
-                  subscriptionStatus: 'canceled',
-                  // subscriptionPlan: null,
-                  // subscriptionCredits: user.subscriptionCredits ?? 0,
-                });
-
-                console.log(
-                  `✅ Canceled current subscription for user ${delMetadata.userId} | Canceled subscription id :${deletedSub.id}`
-                );
-                
-                // Expire credits at the subscription end time
-                const expirationTimeout = subscriptionEndDate.getTime() - currentTime.getTime();
-                setTimeout(async () => {
-                  // Expire credits when subscription period ends
-                  await updateUserSubscription(delMetadata.userId, {
-                    subscriptionCredits: 0, // Expire credits
-                  });
-                  console.log(`⏳ Expired credits for user ${delMetadata.userId} at subscription end.`);
-                }, expirationTimeout); // Timeout until subscription end
-              }
             } else {
               // This was an old subscription (probably from upgrade), ignore it
               console.log(
@@ -875,6 +849,9 @@ app.post(
           }
       );
 
+      await updateUserSubscription(user_id, {
+                  subscriptionStatus: 'canceled',
+          });
       console.log(
         `✅ Canceled subscription ${subscriptionId} - webhook will handle database cleanup`
       );
