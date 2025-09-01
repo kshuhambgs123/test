@@ -251,8 +251,11 @@ export async function updateCreditsRefunded(userID: string, credits: number , lo
     },
   });
 
-  const creditToRefund = log?.leadsRequested ?? 0 - credits > 0 ? log?.leadsRequested ?? 0 - credits : 0;
-  console.log("Credit to refund to user:", creditToRefund);
+  // const creditToRefund = log?.leadsRequested ?? 0 - credits > 0 ? log?.leadsRequested ?? 0 - credits : 0;
+  const leadsRequested = log?.leadsRequested ?? 0;
+  const creditToRefund = leadsRequested > credits ? leadsRequested - credits : 0;
+
+  console.log("Credit to refund to user:",leadsRequested, creditToRefund);
   const updatedCredits = data.credits + creditToRefund;
 
   if (updatedCredits < 0) {
