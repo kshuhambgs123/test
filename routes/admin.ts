@@ -408,7 +408,7 @@ app.get(
   }
 );
 
-app.get("/getAllV1Logs", /*adminVerification,*/ async (req: Request, res: Response) => {  //TESTED
+app.get("/getAllV1Logs", adminVerification, async (req: Request, res: Response) => {  //TESTED
     try {
         const data = await getAllV1Logs()
 
