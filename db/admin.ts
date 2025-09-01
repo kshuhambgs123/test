@@ -234,7 +234,7 @@ export async function updateCreditsForOneAmongAll(userID: string, credits: numbe
   return updatedData;
 }
 
-export async function updateCreditsRefunded(userID: string, credits: number) {
+export async function updateCreditsRefunded(userID: string, credits: number , log_id: string) {
   const data = await prisma.user.findUnique({
     where: {
       UserID: userID,
@@ -245,7 +245,15 @@ export async function updateCreditsRefunded(userID: string, credits: number) {
     return null;
   }
 
-  const updatedCredits = data.credits + credits;
+   const log = await prisma.logsV2.findUnique({
+    where: {
+      LogID: log_id,
+    },
+  });
+
+  const creditToRefund = log?.leadsRequested ?? 0 - credits > 0 ? credits : 0;
+  console.log("Credit to refund to user:", creditToRefund);
+  const updatedCredits = data.credits + creditToRefund;
 
   if (updatedCredits < 0) {
     return "negative";
@@ -263,7 +271,7 @@ export async function updateCreditsRefunded(userID: string, credits: number) {
           increment: credits,
         },
         credits: {
-          increment: credits,
+          increment: creditToRefund,
         },
         TotalCreditsBought: {
           increment: credits,
@@ -277,7 +285,7 @@ export async function updateCreditsRefunded(userID: string, credits: number) {
       },
       data: {
         refundCredits:{
-          decrement: credits,
+          increment: credits,
         },
         credits: updatedCredits,
         TotalCreditsUsed: {

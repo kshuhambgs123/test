@@ -65,13 +65,14 @@ app.post('/webhook',async (req, res) => {
           return;
         }
 
-        const reservedCredits = logsExport.leadsRequested ? logsExport.leadsRequested : parseFloat(leads_count ?? 0) - creditsUsed; //  parseFloat(req.body.leads_count);
-
+        // const reservedCredits = creditsUsed; //  parseFloat(req.body.leads_count);
+        // console.log("Reserved credits:", reservedCredits);
+        // console.log("Credits used:", creditsUsed);
         // Refund any unused credits
-        const creditsToRefund = reservedCredits > 0 ? reservedCredits : 0;
+        const creditsToDeductOnly = creditsUsed ?? 0;
 
-        if (creditsToRefund > 0) {
-          const refundState = await updateCreditsRefunded(logsExport.userID, creditsToRefund);
+        if (creditsToDeductOnly > 0) {
+          const refundState = await updateCreditsRefunded(logsExport.userID, creditsToDeductOnly, log_id);
           if (!refundState) {
             console.error("❌ Failed to refund credits for user:", logsExport.userID);
             // return res.status(500).send("Refund failed");
