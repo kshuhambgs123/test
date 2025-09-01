@@ -518,11 +518,11 @@ app.post("/searchLeadsConfirmPayment", express.raw({ type: "application/json" })
               } 
               else {
                 // If subscription is still active, just remove subscription details but keep credits
-                // await updateUserSubscription(delMetadata.userId, {
-                //   subscriptionStatus: 'canceled',
-                //   subscriptionPlan: null,
-                //   subscriptionCredits: user.subscriptionCredits ?? 0,
-                // });
+                await updateUserSubscription(delMetadata.userId, {
+                  subscriptionStatus: 'canceled',
+                  // subscriptionPlan: null,
+                  // subscriptionCredits: user.subscriptionCredits ?? 0,
+                });
 
                 console.log(
                   `✅ Canceled current subscription for user ${delMetadata.userId} | Canceled subscription id :${deletedSub.id}`
