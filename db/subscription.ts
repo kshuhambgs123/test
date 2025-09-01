@@ -106,6 +106,7 @@ export async function setUpgradeLock(userId: string, locked: boolean) {
     throw new Error(error.message);
   }
 }
+// legacy user : life_time_credits --> 
 
 export async function updateUserSubscription(
   userId: string,
@@ -128,7 +129,7 @@ export async function updateUserSubscription(
 
     console.log(
       `Successfully updated user ${userId} subscription data:`,
-      subscriptionData
+      subscriptionData , user.subscriptionCredits
     );
     return user;
   } catch (error: any) {

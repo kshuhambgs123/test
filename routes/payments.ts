@@ -519,10 +519,8 @@ app.post("/searchLeadsConfirmPayment", express.raw({ type: "application/json" })
               else {
                 // If subscription is still active, just remove subscription details but keep credits
                 await updateUserSubscription(delMetadata.userId, {
-                  subscriptionStatus: null,
-                  stripeSubscriptionId: null,
+                  subscriptionStatus: 'canceled',
                   subscriptionPlan: null,
-                  subscriptionCurrentPeriodEnd: null,
                   subscriptionCredits: user.subscriptionCredits ?? 0,
                 });
 
