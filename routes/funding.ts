@@ -1,0 +1,44 @@
+// funding.ts
+import dotenv from "dotenv";
+import express, { Request, Response } from "express";
+import { getFundingList, getFundingValues } from "../db/funding";
+import verifySessionToken from "../middleware/supabaseAuth";
+import { getUser } from "../db/user";
+
+dotenv.config();
+
+const app = express.Router();
+
+app.get(
+  "/dropdown",
+  verifySessionToken,
+  async (req: Request, res: Response): Promise<void> => {
+    try {
+      const userID = (req as any).user.id; 
+      const user = await getUser(userID);
+
+      if (!user) {
+        res.status(404).json({ message: "User not found" });
+        return;
+      }
+
+    //   const search = req.query.search as string | undefined;
+
+      const funding = await getFundingList();
+
+    //   console.log("funding stages: ", await getFundingValues(["Angel", "Seed"]));
+
+      if (!funding || funding.length === 0) {
+        res.status(200).json({ message: "No funding stages found" , funding: [] });
+        return;
+      }
+
+      res.status(200).json({ funding });
+    } catch (error: any) {
+      console.error("Error fetching logs:", error);
+      res.status(500).json({ message: error.message });
+    }
+  }
+);
+
+export default app;

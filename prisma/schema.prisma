@@ -215,6 +215,15 @@ model Industry {
   cleaned_name   String   
 }
 
+model LatestFundingStageFacet {
+  id            String   @id @default(cuid()) 
+  value         Int?     @unique
+  display_name  String?
+
+  @@map("latest_funding_stage_facets")
+}
+
+
 model Technology {
   id             String   @id @default(cuid()) 
   category    String
