@@ -155,6 +155,7 @@ export interface UpdateCreditsRequest extends Request {
   body: {
     userID: string;
     credits: number;
+    type?: string;
   };
 }
 

@@ -1,6 +1,6 @@
 // admin.ts
 
-import { Logs } from "@prisma/client";
+import { LogsV2 } from "@prisma/client";
 import express, { Request, Response } from "express";
 import fs from "fs";
 import path from "path";
@@ -18,12 +18,14 @@ import {
   revokeAPIkey,
   tokenVerify,
   updateCredits,
+  updateCreditsForOneAmongAll,
 } from "../db/admin";
 import { getAllInvoices, getInvoiceByBillingID } from "../db/billing";
 import {
   createCompleteLog,
   getAllLogs,
   getAllLogsByUserID,
+  getAllV1Logs,
   getOneLog,
   updateLog,
 } from "../db/log";
@@ -329,9 +331,11 @@ app.post(
   async (req: UpdateCreditsRequest, res: Response) => {
     //TESTED
     try {
-      const { userID, credits } = req.body;
+      const { userID, credits , type} = req.body;
 
-      const resp = await updateCredits(userID, credits);
+      // const resp = await updateCredits(userID, credits);
+      // const resp = await updateCredits(userID, credits);
+      const resp = await updateCreditsForOneAmongAll(userID, credits, type);
       if (resp === "negative") {
         throw new Error("Credits cannot be negative");
       }
@@ -404,6 +408,19 @@ app.get(
   }
 );
 
+app.get("/getAllV1Logs", adminVerification, async (req: Request, res: Response) => {  //TESTED
+    try {
+        const data = await getAllV1Logs()
+
+        if (!data) {
+            throw new Error("failed to find logs");
+        }
+        res.status(200).json({ data });
+    } catch (error: any) {
+        res.status(400).json({ "message": error.message });
+    }
+});
+
 app.post(
   "/changeRegistrationCredits",
   adminVerification,
@@ -412,7 +429,7 @@ app.post(
     try {
       const { newPrice } = req.body;
       if (isNaN(newPrice) || !newPrice) {
-        throw new Error("Invalid price value");
+        throw new Error("Invalid credit value");
       }
 
       process.env.RegistrationCredits = newPrice.toString();
@@ -443,7 +460,7 @@ app.post(
     try {
       const { newPrice } = req.body;
       if (isNaN(newPrice) || !newPrice) {
-        throw new Error("Invalid price value");
+        throw new Error("Invalid credit value");
       }
 
       process.env.Searchcredits = newPrice.toString();
@@ -461,6 +478,37 @@ app.post(
       fs.writeFileSync(envFilePath, newEnvFileContent);
 
       res.status(200).json({ resp: "Updated searchcredits credits" });
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  }
+);
+
+app.post(
+  "/changePercentageSearchCredits",
+  adminVerification,
+  async (req: ChangeEnrichPriceRequest, res: Response) => {
+    try {
+      const { newPrice } = req.body;
+      if (isNaN(newPrice) || !newPrice) {
+        throw new Error("Invalid percentage value");
+      }
+
+      process.env.PERCENTAGE = newPrice.toString();
+      
+      const envFilePath = path.resolve(__dirname, "../.env");
+      if (!fs.existsSync(envFilePath)) {
+        throw new Error(".env file not found");
+      }
+
+      let envFileContent = fs.readFileSync(envFilePath, "utf8");
+      const newEnvFileContent = envFileContent.replace(
+        /(^|\n)PERCENTAGE=.*/,
+        `$1PERCENTAGE= ${newPrice}`
+      );
+      fs.writeFileSync(envFilePath, newEnvFileContent);
+
+      res.status(200).json({ resp: "Updated searchcredits percentage" });
     } catch (error: any) {
       res.status(400).json({ error: error.message });
     }
@@ -523,7 +571,7 @@ app.get(
     //TESTED
     try {
       if (!process.env.RegistrationCredits) {
-        throw new Error("No price set");
+        throw new Error("No registration credit set");
       }
       res.status(200).json({ resp: process.env.RegistrationCredits });
     } catch (error: any) {
@@ -538,7 +586,7 @@ app.get(
   async (req: Request, res: Response) => {
     try {
       if (!process.env.Searchcredits) {
-        throw new Error("No price set");
+        throw new Error("No search credit set");
       }
       res.status(200).json({ resp: process.env.Searchcredits });
     } catch (error: any) {
@@ -630,7 +678,7 @@ app.post(
 
       setImmediate(async () => {
         console.log("Checking lead status for logID: ", log?.LogID);
-        const resp = await checkLeadStatus(log as Logs);
+        const resp = await checkLeadStatus(log as LogsV2);
         console.log("Lead status checked for logID: ", log?.LogID);
       });
     } catch (error: any) {
@@ -639,7 +687,7 @@ app.post(
   }
 );
 
-async function checkLeadStatus(log: Logs) {
+async function checkLeadStatus(log: LogsV2) {
   const leadStatusAPI = process.env.SEARCHAUTOMATIONAPISTATUS as string;
 
   try {

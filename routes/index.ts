@@ -11,6 +11,7 @@ import industryRoutes from "./industry";
 import departmentRoutes from "./departments";
 import exportRoutes from "./export";
 import technologyRoutes from "./technology";
+import fundingRoutes from "./funding";
 
 const app = express.Router();
 
@@ -23,6 +24,7 @@ app.use("/billing", billingRoutes);
 app.use("/payments", paymentRoutes);
 app.use("/people", sampleSearchRoutes);
 app.use("/industry", industryRoutes);
+app.use("/funding", fundingRoutes);
 app.use("/technology", technologyRoutes);
 app.use("/departments", departmentRoutes);
 app.use("/export", exportRoutes);

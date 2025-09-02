@@ -1,6 +1,6 @@
 // search_auto.ts
 
-import { Logs } from "@prisma/client";
+import { LogsV2 } from "@prisma/client";
 import dotenv from "dotenv";
 import express, { Request, Response } from "express";
 import formdata from "form-data";
@@ -8,6 +8,7 @@ import { updateCredits } from "../db/admin";
 import { createLogOnly, updateLog } from "../db/log";
 import { deductCredits, deductSearchCredits } from "../db/subscription";
 import { getUser } from "../db/user";
+import { getFundingValues } from "../db/funding";
 import { LeadStatusResponse } from "../types/interfaces";
 import verifySessionToken from "../middleware/supabaseAuth";
 import { request } from "http";
@@ -45,6 +46,7 @@ const searchSchema = z.object({
   organization_industry_display_name: z.array(z.string()).optional(),
   organization_industry_not_display_name: z.array(z.string()).optional(),
   organization_locations: z.array(z.string()).optional(),
+  Organization_latest_funding_stage_name: z.array(z.string()).optional(),
 }).passthrough();
 
 async function handleRequest(body: any) {
@@ -58,6 +60,14 @@ async function handleRequest(body: any) {
 
   const organization_industry_tag_ids = organization_industry_display_names_list.length > 0 ? await getIndustryIds(organization_industry_display_names_list) : [];
 
+  const organization_latest_funding_stage_name_list = parsedBody.Organization_latest_funding_stage_name?.map(
+    (item: string) => item.trim()
+  ) ?? [];
+  // console.log("organization_latest_funding_stage_name_list : ", organization_latest_funding_stage_name_list);
+  delete parsedBody.Organization_latest_funding_stage_name;
+  
+  const organization_industry_display_code = organization_latest_funding_stage_name_list.length > 0 ? await getFundingValues(organization_latest_funding_stage_name_list) : [];
+
   const organization_industry_not_display_names_list = parsedBody.organization_industry_not_display_name?.map(
     (item: string) => item.trim()
   ) ?? [];
@@ -70,6 +80,7 @@ async function handleRequest(body: any) {
     organization_industry_display_names_list: organization_industry_display_names_list,
     organization_industry_tag_ids: organization_industry_tag_ids.length > 0 ? organization_industry_tag_ids.map((item) => item.industry_id) : [],
     organization_not_industry_tag_ids: organization_not_industry_tag_ids.length > 0 ? organization_not_industry_tag_ids.map((item) => item.industry_id) : [],
+    Organization_latest_funding_stage_cd: organization_industry_display_code.length > 0 ? organization_industry_display_code : [],  
   };
 }
 
@@ -148,9 +159,7 @@ app.post(
 
       const searchAPI = process.env.SAMPLESEARCHAUTOMATIONAPI as string;
 
-      const finalBody = body.organization_industry_tag_ids.length > 0
-        ? { ...body.cleanedBody, organization_industry_tag_ids: body.organization_industry_tag_ids }
-        : body.cleanedBody;
+      const finalBody = { ...body.cleanedBody, organization_industry_tag_ids: body.organization_industry_tag_ids , organization_not_industry_tag_ids: body.organization_not_industry_tag_ids , Organization_latest_funding_stage_cd: body.Organization_latest_funding_stage_cd};
       
       const headers = {
           "Content-Type": "application/json",
@@ -158,9 +167,10 @@ app.post(
       
       const response = await axios.post(searchAPI, finalBody, {
         headers,
+        timeout: 20000, // 20 seconds
       });
 
-      if (response.status !== 200) {
+      if (!response || response.status !== 200) {
         throw new Error("Failed to fetch");
       }
       

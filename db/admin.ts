@@ -119,7 +119,7 @@ export async function updateCredits(userID: string, credits: number) {
   return updatedData;
 }
 
-export async function updateCreditsForOneAmongAll(userID: string, credits: number, type: string) {
+export async function updateCreditsForOneAmongAll(userID: string, credits: number, type?: string) {
   const data = await prisma.user.findUnique({
     where: {
       UserID: userID,
@@ -176,13 +176,25 @@ export async function updateCreditsForOneAmongAll(userID: string, credits: numbe
           UserID: userID,
         },
         data: {
-        // searchCredits: updatedSearchCredits,
-        searchCredits: {
-          increment: Math.abs(updatedSearchCredits),
-        },
+        searchCredits: updatedSearchCredits,
+        // searchCredits: {
+        //   increment: Math.abs(updatedSearchCredits),
+        // },
         },
       });
-    } 
+    } else if (credits < 0) {
+      updatedData = await prisma.user.update({
+        where: {
+          UserID: userID,
+        },
+        data: {
+          searchCredits: updatedSearchCredits,
+          searchCreditsUsed: {
+            increment: Math.abs(credits),
+          },
+        },
+      });
+    }
     else {
     return null;
   }
@@ -200,7 +212,16 @@ export async function updateCreditsForOneAmongAll(userID: string, credits: numbe
           subscriptionCredits: updatedSubscriptionCredits,
         },
       });
-    } 
+    } else if (credits < 0) {
+      updatedData = await prisma.user.update({
+        where: {
+          UserID: userID,
+        },
+        data: {
+          subscriptionCredits: updatedSubscriptionCredits,
+        },
+      });
+    }
     else {
     return null;
   }
@@ -213,7 +234,7 @@ export async function updateCreditsForOneAmongAll(userID: string, credits: numbe
   return updatedData;
 }
 
-export async function updateCreditsRefunded(userID: string, credits: number) {
+export async function updateCreditsRefunded(userID: string, credits: number , log_id: string) {
   const data = await prisma.user.findUnique({
     where: {
       UserID: userID,
@@ -224,7 +245,18 @@ export async function updateCreditsRefunded(userID: string, credits: number) {
     return null;
   }
 
-  const updatedCredits = data.credits + credits;
+   const log = await prisma.logsV2.findUnique({
+    where: {
+      LogID: log_id,
+    },
+  });
+
+  // const creditToRefund = log?.leadsRequested ?? 0 - credits > 0 ? log?.leadsRequested ?? 0 - credits : 0;
+  const leadsRequested = log?.leadsRequested ?? 0;
+  const creditToRefund = leadsRequested > credits ? leadsRequested - credits : 0;
+
+  console.log("Credit to refund to user:",leadsRequested, creditToRefund);
+  const updatedCredits = data.credits + creditToRefund;
 
   if (updatedCredits < 0) {
     return "negative";
@@ -238,8 +270,12 @@ export async function updateCreditsRefunded(userID: string, credits: number) {
         UserID: userID,
       },
       data: {
-        refundCredits: credits,
-        credits: updatedCredits,
+        refundCredits: { 
+          increment: credits,
+        },
+        credits: {
+          increment: creditToRefund,
+        },
         TotalCreditsBought: {
           increment: credits,
         },
@@ -251,7 +287,9 @@ export async function updateCreditsRefunded(userID: string, credits: number) {
         UserID: userID,
       },
       data: {
-        refundCredits: credits,
+        refundCredits:{
+          increment: credits,
+        },
         credits: updatedCredits,
         TotalCreditsUsed: {
           increment: Math.abs(credits),
@@ -281,7 +319,7 @@ export async function getUserById(userID: string) {
 
 export async function getLogsByUserID(userID: string) {
   try {
-    const data = await prisma.logs.findMany({
+    const data = await prisma.logsV2.findMany({
       where: {
         userID: userID,
       },
@@ -290,9 +328,9 @@ export async function getLogsByUserID(userID: string) {
   } catch (error) {
     console.error("Database error:", error);
     // Attempt to reconnect
-    await prisma.$disconnect();
+    // await prisma.$disconnect();
     // Retry once
-    return await prisma.logs.findMany({
+    return await prisma.logsV2.findMany({
       where: {
         userID: userID,
       },
@@ -321,7 +359,7 @@ export async function editLog(
   url: string,
   valid_email_count: number
 ) {
-  const log = await prisma.logs.findUnique({
+  const log = await prisma.logsV2.findUnique({
     where: {
       LogID: logID,
     },
@@ -351,7 +389,7 @@ export async function editLog(
     }
   }
 
-  const data = await prisma.logs.update({
+  const data = await prisma.logsV2.update({
     where: {
       LogID: logID,
     },

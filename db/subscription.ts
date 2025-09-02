@@ -23,8 +23,8 @@ async function fetchDynamicTiers() {
 
     for (const price of prices.data) {
       const product = price.product as any;
-
-      if (price.recurring?.interval !== "month") continue;
+    
+      // if (price.recurring?.interval !== "month") continue;
 
       // Product Naming Convention: Use format "searchleads_recurring_tier_[TIER]" for auto-detection
       // Examples: "searchleads_recurring_tier_10k", "searchleads_recurring_tier_25k"
@@ -106,6 +106,7 @@ export async function setUpgradeLock(userId: string, locked: boolean) {
     throw new Error(error.message);
   }
 }
+// legacy user : life_time_credits --> 
 
 export async function updateUserSubscription(
   userId: string,
@@ -127,8 +128,8 @@ export async function updateUserSubscription(
     });
 
     console.log(
-      `Successfully updated user ${userId} subscription data:`,
-      subscriptionData
+      `Successfully canceled for user ${userId} subscription data:`,
+      subscriptionData , user.subscriptionCredits
     );
     return user;
   } catch (error: any) {

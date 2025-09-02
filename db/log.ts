@@ -1,4 +1,4 @@
-import { Logs } from "@prisma/client";
+import { Logs, LogsV2 } from "@prisma/client";
 import { prisma } from "./index";
 import { deductCredits } from "./subscription";
 
@@ -14,9 +14,9 @@ export async function createLog(
   url: string,
   name: string,
   email: string
-): Promise<Logs | null> {
+): Promise<LogsV2 | null> {
   try {
-    const log = await prisma.logs.create({
+    const log = await prisma.logsV2.create({
       data: {
         LogID: logID,
         userID: userID,
@@ -41,9 +41,9 @@ export async function createLog(
 
 // get all
 
-export async function getAllLogsByUserID(userID: string): Promise<Logs[]> {
+export async function getAllLogsByUserID(userID: string): Promise<LogsV2[]> {
   try {
-    const logs = await prisma.logs.findMany({
+    const logs = await prisma.logsV2.findMany({
       where: {
         userID: userID,
       },
@@ -55,9 +55,9 @@ export async function getAllLogsByUserID(userID: string): Promise<Logs[]> {
   }
 }
 
-export async function getAllLogs(): Promise<Logs[]> {
+export async function getAllLogs(): Promise<LogsV2[]> {
   try {
-    const logs = await prisma.logs.findMany();
+    const logs = await prisma.logsV2.findMany();
     if (!logs) {
       return [];
     }
@@ -67,11 +67,24 @@ export async function getAllLogs(): Promise<Logs[]> {
   }
 }
 
+export async function getAllV1Logs(): Promise<any> {
+    try {
+        const logs = await prisma.logs.findMany();
+        if (!logs) {
+            return [];
+        }
+        return logs;
+    } catch (error: any) {
+        throw new Error(error.message);
+    }
+}
+
+
 //getone
 
-export async function getOneLog(logID: string): Promise<Logs | null> {
+export async function getOneLog(logID: string): Promise<LogsV2 | null> {
   try {
-    const log = await prisma.logs.findUnique({
+    const log = await prisma.logsV2.findUnique({
       where: {
         LogID: logID,
       },
@@ -90,9 +103,9 @@ export async function updateLog(
   status: string,
   url: string,
   leadsEnriched: number
-): Promise<Logs | null> {
+): Promise<LogsV2 | null> {
   try {
-    const existingLog = await prisma.logs.findUnique({
+    const existingLog = await prisma.logsV2.findUnique({
       where: {
         LogID: logID,
       },
@@ -102,7 +115,7 @@ export async function updateLog(
       return null;
     }
 
-    const log = await prisma.logs.update({
+    const log = await prisma.logsV2.update({
       where: {
         LogID: logID,
       },
@@ -127,9 +140,9 @@ export async function updateLogByWebhook(
   valid_email_count: number,
   leadsEnriched: number,
   creditsUsed: number
-): Promise<Logs | null> {
+): Promise<LogsV2 | null> {
   try {
-    const existingLog = await prisma.logs.findUnique({
+    const existingLog = await prisma.logsV2.findUnique({
       where: {
         LogID: logID,
       },
@@ -139,7 +152,7 @@ export async function updateLogByWebhook(
       return null;
     }
 
-    const log = await prisma.logs.update({
+    const log = await prisma.logsV2.update({
       where: {
         LogID: logID,
       },
@@ -169,7 +182,7 @@ export async function createCompleteLog(
   url: string,
   status: string,
   valid_email_count: number
-): Promise<Logs | null> {
+): Promise<LogsV2 | null> {
   try {
     const deductResult = await deductCredits(userID, creditsUsed);
 
@@ -183,7 +196,7 @@ export async function createCompleteLog(
       },
     });
 
-    const log = await prisma.logs.create({
+    const log = await prisma.logsV2.create({
       data: {
         LogID: logID,
         userID: userID,
@@ -218,9 +231,9 @@ export async function createLogOnly(
   url: string,
   userName: string,
   userEmail: string
-): Promise<Logs | null> {
+): Promise<LogsV2 | null> {
   try {
-    const log = await prisma.logs.create({
+    const log = await prisma.logsV2.create({
       data: {
         LogID: logID,
         userID: userID,

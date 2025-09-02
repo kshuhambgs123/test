@@ -4,6 +4,8 @@ import dotenv from "dotenv";
 import express, { Request, Response } from "express";
 import { createUser, getUser, refreshAPIKey } from "../db/user";
 import verifySessionToken from "../middleware/supabaseAuth";
+import { stripeClient } from "../payments/stripe";
+import { prisma } from "../db/index";
 dotenv.config();
 
 const app = express.Router();
@@ -142,6 +144,74 @@ app.get(
     try {
       const costPerLead = parseFloat(process.env.COSTPERLEAD as string);
       res.status(200).json({ costPerLead });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  }
+);
+
+app.get(
+  "/renewSubscription",
+  verifySessionToken,
+  async (req: Request, res: Response): Promise<void> => {
+    try {
+      const userID = (req as any).user.id;
+
+      const user = await getUser(userID);
+
+      if (!user) {
+        res.status(404).json({ message: "User not found" });
+        return;
+      }
+      
+      if (!user.stripeCustomerId || !user.stripeSubscriptionId) {
+            res.status(200).json({
+              hasActiveSubscription: false,
+              message: "No active subscription found",
+            });
+            return;
+      }
+      
+      const subscription = await stripeClient.subscriptions.retrieve(
+            user.stripeSubscriptionId,
+      );
+
+      if (!subscription) {
+          res.status(200).json({
+            hasActiveSubscription: false,   
+            message: "No active subscription found",                        
+          });
+          return;
+      }
+
+      if (subscription.status === 'active') {
+        if (subscription.cancel_at_period_end) {
+          // Resume it
+          await stripeClient.subscriptions.update(user.stripeSubscriptionId, {
+            cancel_at_period_end: false,
+          });
+
+          await prisma.user.update({
+            where: { UserID: userID },
+            data: {
+              subscriptionStatus: 'active',
+            },
+          });
+
+          res.status(200).json({
+            hasActiveSubscription: true,
+            message: 'Subscription resumed successfully',
+          });
+          return;
+        }
+
+        res.status(200).json({
+          hasActiveSubscription: true,
+          message: 'Subscription is already active',
+        });
+        return;
+      }
+      res.status(200).json({ hasActiveSubscription: true, message: "Subscription is already active"});
     } catch (error: any) {
       res.status(500).json({ message: error.message });
     }

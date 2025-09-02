@@ -16,7 +16,7 @@ app.get(
       const logs = await getLogsByUserID(userID);
 
       if (!logs || logs.length === 0) {
-        res.status(200).json({ message: "No logs found for this user" });
+        res.status(200).json({ message: "No logs found for this user", logs: [] });
         return;
       }
 

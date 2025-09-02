@@ -39,7 +39,7 @@ app.get("/health", async (req: Request, res: Response, next: NextFunction) => {
 
 app.post('/webhook',async (req, res) => {
     console.log('🔔 Webhook received:');
-    const { log_id } = req.body;
+    const { log_id , leads_count} = req.body;
 
     console.log('📌 client_id:', log_id);
     // console.log('📦 Other data:', rest);
@@ -65,13 +65,14 @@ app.post('/webhook',async (req, res) => {
           return;
         }
 
-        const reservedCredits = logsExport.creditsUsed; //  parseFloat(req.body.leads_count);
-
+        // const reservedCredits = creditsUsed; //  parseFloat(req.body.leads_count);
+        // console.log("Reserved credits:", reservedCredits);
+        // console.log("Credits used:", creditsUsed);
         // Refund any unused credits
-        const creditsToRefund = reservedCredits - creditsUsed;
+        const creditsToDeductOnly = creditsUsed ?? 0;
 
-        if (creditsToRefund > 0) {
-          const refundState = await updateCreditsRefunded(logsExport.userID, creditsToRefund);
+        if (creditsToDeductOnly > 0) {
+          const refundState = await updateCreditsRefunded(logsExport.userID, creditsToDeductOnly, log_id);
           if (!refundState) {
             console.error("❌ Failed to refund credits for user:", logsExport.userID);
             // return res.status(500).send("Refund failed");

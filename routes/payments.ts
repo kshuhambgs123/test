@@ -312,7 +312,7 @@ app.post("/searchLeadsConfirmPayment", express.raw({ type: "application/json" })
                 // const subMetadata =
                 //   subscription.metadata as unknown as SubscriptionMetadata;
                 if(subMetadata?.userId && subscription.id) {  
-                  console.log(`✅ Invoice logged called for user ${subMetadata.userId} and subscription id: ${subscription.id}`);
+                  console.log(`✅ Invoice logged called for user ${subMetadata.userId} `);
                   const invoiceLogged =  await createSubscriptionInvoiceFromWebhook(subMetadata.userId, subscription.id);
                 }
               }
@@ -498,18 +498,20 @@ app.post("/searchLeadsConfirmPayment", express.raw({ type: "application/json" })
             );
 
             if (user && user.stripeSubscriptionId === deletedSub.id) {
-              // This was their current subscription, so clear their data
+              console.log(
+                `🎯 Processing cancellation of current subscription ${deletedSub.id} for user ${delMetadata.userId}`
+              );
               await updateUserSubscription(delMetadata.userId, {
-                subscriptionStatus: null,
-                stripeSubscriptionId: null,
-                subscriptionPlan: null,
-                subscriptionCurrentPeriodEnd: null,
-                subscriptionCredits: 0,
+                  subscriptionStatus: null,
+                  stripeSubscriptionId: null,
+                  subscriptionPlan: null,
+                  subscriptionCurrentPeriodEnd: null,
+                  subscriptionCredits: 0,  // Expire credits when subscription ends
               });
 
-              console.log(
-                `✅ Canceled current subscription for user ${delMetadata.userId} | Canceled subscription id :${deletedSub.id}`
-              );
+                console.log(
+                  `✅ Expired credits at subscription end and canceled subscription for user ${delMetadata.userId} | Canceled subscription id :${deletedSub.id}`
+                );
             } else {
               // This was an old subscription (probably from upgrade), ignore it
               console.log(
@@ -832,20 +834,30 @@ app.post(
         `---------------- Canceling subscription: ${subscriptionId} for user: ${userId ? userId : user_id}`
       );
 
-      const canceledSubscription = await stripeClient.subscriptions.cancel(
-        subscriptionId,
-        {
-          prorate: false,
-          invoice_now: false,
-        }
+      // const canceledSubscription = await stripeClient.subscriptions.cancel(
+      //   subscriptionId,
+      //   {
+      //     prorate: false,
+      //     invoice_now: false,
+      //   }
+      // );
+
+      const canceledAtPeriodEnd = await stripeClient.subscriptions.update(
+          subscriptionId,
+          {
+            cancel_at_period_end: true,
+          }
       );
 
+      await updateUserSubscription(user_id, {
+                  subscriptionStatus: 'canceled',
+          });
       console.log(
         `✅ Canceled subscription ${subscriptionId} - webhook will handle database cleanup`
       );
 
       res.status(200).json({
-        subscription: canceledSubscription,
+        subscription: canceledAtPeriodEnd,
         message: "Subscription canceled successfully",
       });
     } catch (error: any) {
