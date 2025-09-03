@@ -80,7 +80,7 @@ async function handleRequest(body: any) {
     organization_industry_display_names_list: organization_industry_display_names_list,
     organization_industry_tag_ids: organization_industry_tag_ids.length > 0 ? organization_industry_tag_ids.map((item) => item.industry_id) : [],
     organization_not_industry_tag_ids: organization_not_industry_tag_ids.length > 0 ? organization_not_industry_tag_ids.map((item) => item.industry_id) : [],
-    Organization_latest_funding_stage_cd: organization_industry_display_code.length > 0 ? organization_industry_display_code : [],  
+    organization_latest_funding_stage_cd: organization_industry_display_code.length > 0 ? organization_industry_display_code : [],  
   };
 }
 
@@ -159,8 +159,8 @@ app.post(
 
       const searchAPI = process.env.SAMPLESEARCHAUTOMATIONAPI as string;
 
-      const finalBody = { ...body.cleanedBody, organization_industry_tag_ids: body.organization_industry_tag_ids , organization_not_industry_tag_ids: body.organization_not_industry_tag_ids , Organization_latest_funding_stage_cd: body.Organization_latest_funding_stage_cd};
-      
+      const finalBody = { ...body.cleanedBody, organization_industry_tag_ids: body.organization_industry_tag_ids , organization_not_industry_tag_ids: body.organization_not_industry_tag_ids , organization_latest_funding_stage_cd: body.organization_latest_funding_stage_cd};
+      console.log("Final body to send: ", finalBody, finalBody.organization_latest_funding_stage_cd);
       const headers = {
           "Content-Type": "application/json",
       };

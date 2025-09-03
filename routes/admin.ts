@@ -12,6 +12,7 @@ import {
   generateAPIkey,
   getAllApikeys,
   getAllUsers,
+  getAllUsersWithFutureSubscription,
   getApiKey,
   getLogsByUserID,
   getUserById,
@@ -42,6 +43,7 @@ import {
   LeadStatusResponse,
   ChangeMaintenanceRequest,
 } from "../types/interfaces";
+import { stripeClient } from "../payments/stripe";
 
 const app = express.Router();
 
@@ -236,7 +238,20 @@ app.get(
   async (req: Request, res: Response) => {
     //TESTED
     try {
-      const resp = await getAllUsers();
+      let resp = await getAllUsersWithFutureSubscription();
+      for (const user of resp) {
+        if (user.stripeSubscriptionId) {
+          const subscription = await stripeClient.subscriptions.retrieve(
+                user.stripeSubscriptionId,
+          );
+          // const status = subscription.status;
+          const cancelAtPeriodEnd = subscription.cancel_at_period_end;
+          user.cancel_at_period_end_flag = cancelAtPeriodEnd; 
+        } else {
+           user.cancel_at_period_end_flag = ''; 
+        }
+      }
+      // console.log("Users fetched:", resp.length, resp[0]);
       res.status(200).json({ resp });
     } catch (error: any) {
       res.status(404).json({ message: error.message });
