@@ -499,6 +499,21 @@ app.post(
   }
 );
 
+app.get(
+  "/getPercentageSearchCredits",
+  adminVerification,
+  async (req: Request, res: Response) => {
+    try {
+      if (!process.env.PERCENTAGE) {
+        throw new Error("No search credit percentage set");
+      }
+      res.status(200).json({ resp: process.env.PERCENTAGE });
+    } catch (error: any) {
+      res.status(404).json({ error: error.message });
+    }
+  }
+);
+
 app.post(
   "/changePercentageSearchCredits",
   adminVerification,
@@ -523,7 +538,7 @@ app.post(
       );
       fs.writeFileSync(envFilePath, newEnvFileContent);
 
-      res.status(200).json({ resp: "Updated searchcredits percentage" });
+      res.status(200).json({ resp: "Updated search credit percentage" });
     } catch (error: any) {
       res.status(400).json({ error: error.message });
     }
