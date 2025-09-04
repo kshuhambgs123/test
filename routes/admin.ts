@@ -2,6 +2,7 @@
 
 import { LogsV2 } from "@prisma/client";
 import express, { Request, Response } from "express";
+import axios from "axios";
 import fs from "fs";
 import path from "path";
 import { v4 } from "uuid";
@@ -42,8 +43,11 @@ import {
   ChangeEnrichPriceRequest,
   LeadStatusResponse,
   ChangeMaintenanceRequest,
+  ChangeCurrencyRateRequest,
 } from "../types/interfaces";
 import { stripeClient } from "../payments/stripe";
+import dotenv from "dotenv";
+dotenv.config({ path: path.resolve(__dirname, "../.env") });
 
 const app = express.Router();
 
@@ -541,6 +545,160 @@ app.post(
       res.status(200).json({ resp: "Updated search credit percentage" });
     } catch (error: any) {
       res.status(400).json({ error: error.message });
+    }
+  }
+);
+
+app.get(
+  "/getCurrencyRate",
+  adminVerification,
+  async (req: Request, res: Response) => {
+    try {
+      if (!process.env.USD_RATE || !process.env.INR_RATE || !process.env.GBP_RATE || !process.env.EUR_RATE) {
+        throw new Error("One or more currency rates are not set");
+      }
+
+      res.status(200).json({
+        usd: parseFloat(process.env.USD_RATE),
+        inr: parseFloat(process.env.INR_RATE),
+        gbp: parseFloat(process.env.GBP_RATE),
+        eur: parseFloat(process.env.EUR_RATE),
+      });
+
+    } catch (error: any) {
+      res.status(404).json({ error: error.message });
+    }
+  }
+);
+
+app.post(
+  "/changeCurrencyRate",
+  adminVerification,
+  async (req: ChangeCurrencyRateRequest, res: Response) => {
+    try {
+      const { usd, inr, gbp, eur } = req.body;
+      if ([usd, inr, gbp, eur].some(val => isNaN(val) || val === null || val === undefined || val <= 0)) {
+        throw new Error("Invalid currency rate");
+      }
+      // console.log("Received rates:", { usd, inr, gbp, eur });
+      const envFilePath = path.resolve(__dirname, "../.env");
+
+      if (!fs.existsSync(envFilePath)) {
+        throw new Error(".env file not found");
+      }
+
+      let envFileContent = fs.readFileSync(envFilePath, "utf8");
+
+      const currencyRates = {
+        USD_RATE: usd,
+        INR_RATE: inr,
+        GBP_RATE: gbp,
+        EUR_RATE: eur,
+      };
+
+      let newEnvFileContent = envFileContent;
+      for (const [key, value] of Object.entries(currencyRates)) {
+        const regex = new RegExp(`(^|\\n)${key}=.*`, "g");
+
+        if (envFileContent.match(regex)) {
+          // If key exists, replace it
+          newEnvFileContent = envFileContent.replace(regex, `$1${key}=${value}`);
+        } else {
+          // If key doesn't exist, append it
+          newEnvFileContent += `\n${key}=${value}`;
+        }
+
+        // Also update process.env
+        process.env[key] = value.toString();
+      }
+
+      fs.writeFileSync(envFilePath, newEnvFileContent);
+
+      res.status(200).json({ resp: "Updated search credit percentage" });
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  }
+);
+
+app.get(
+  "/refreshCurrencyRate",
+  adminVerification,
+  async (req: ChangeCurrencyRateRequest, res: Response) => {
+    try {
+      const appId = "2f11dc065ce04ce1b7c9cf7ce1ceea8f";
+      const symbols = ["INR", "GBP", "EUR"].join(",");
+      const url = `https://openexchangerates.org/api/latest.json?app_id=${appId}&symbols=${symbols}`;
+
+      const response = await axios.get(url);
+
+      if (response.status !== 200 || !response.data || !response.data.rates) {
+        throw new Error("Invalid response from currency API");
+      }
+
+      const rates = response.data.rates;
+
+      // Verify presence and validity of rates
+      const { INR, GBP, EUR } = rates;
+      if (
+        typeof INR !== "number" ||
+        typeof GBP !== "number" ||
+        typeof EUR !== "number"
+      ) {
+        throw new Error("Missing or invalid currency rates in API response");
+      }
+
+      // Validate correctness of rates
+      if (
+        INR <= 0 || INR > 200 ||
+        GBP <= 0 || GBP > 2 ||
+        EUR <= 0 || EUR > 2
+      ) {
+        throw new Error("One or more currency rates are outside reasonable bounds");
+      }
+
+      const fetchedRates = {
+        USD_RATE: 1,
+        INR_RATE: INR,
+        GBP_RATE: GBP,
+        EUR_RATE: EUR,
+      };
+
+      // console.log("Fetched rates:", fetchedRates);
+
+      const envFilePath = path.resolve(__dirname, "../.env");
+
+      if (!fs.existsSync(envFilePath)) {
+        throw new Error(".env file not found");
+      }
+
+      let envFileContent = fs.readFileSync(envFilePath, "utf8");
+      let newEnvFileContent = envFileContent;
+
+      const changedRates: Record<string,  number > = {};
+      for (const [key, newValue] of Object.entries(fetchedRates)) {
+        const regex = new RegExp(`(^|\\n)${key}\\s*=\\s*([^\\n]*)`);
+        if (regex.test(newEnvFileContent)) {
+          newEnvFileContent = envFileContent.replace(regex, `$1${key}=${newValue}`);
+        } else {
+          newEnvFileContent += `\n${key}=${newValue}`;
+        }
+
+        process.env[key] = newValue.toString();
+
+        changedRates[key] = newValue;
+      }
+
+      fs.writeFileSync(envFilePath, newEnvFileContent.trim() + "\n", "utf8");
+
+      res.status(200).json({
+        message: "Currency rates refreshed successfully.",
+        fetchedRates,
+        changedRates,
+      });
+    } catch (error: any) {
+      console.error("❌ Failed to refresh currency rates:", error.message);
+      res.status(500).json({ error: error.message });
     }
   }
 );
