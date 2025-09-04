@@ -165,6 +165,15 @@ export interface ChangeEnrichPriceRequest extends Request {
   };
 }
 
+export interface ChangeCurrencyRateRequest extends Request {
+  body: {
+    usd: number;
+    inr: number;
+    gbp: number;
+    eur: number;
+  };
+}
+
 export interface ChangeMaintenanceRequest extends Request {
   body: {
     mode: string;
