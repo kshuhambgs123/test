@@ -23,6 +23,11 @@ export async function getAllUsers() {
   return data;
 }
 
+export async function getAllUsersWithFutureSubscription() : Promise<any> {
+  const data = await prisma.user.findMany();
+  return data;
+}
+
 export async function generateAPIkey(userID: string) {
   const key = uuid() as string;
 

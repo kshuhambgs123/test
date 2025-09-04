@@ -12,6 +12,7 @@ import {
   generateAPIkey,
   getAllApikeys,
   getAllUsers,
+  getAllUsersWithFutureSubscription,
   getApiKey,
   getLogsByUserID,
   getUserById,
@@ -42,6 +43,7 @@ import {
   LeadStatusResponse,
   ChangeMaintenanceRequest,
 } from "../types/interfaces";
+import { stripeClient } from "../payments/stripe";
 
 const app = express.Router();
 
@@ -236,7 +238,20 @@ app.get(
   async (req: Request, res: Response) => {
     //TESTED
     try {
-      const resp = await getAllUsers();
+      let resp = await getAllUsersWithFutureSubscription();
+      for (const user of resp) {
+        if (user.stripeSubscriptionId) {
+          const subscription = await stripeClient.subscriptions.retrieve(
+                user.stripeSubscriptionId,
+          );
+          // const status = subscription.status;
+          const cancelAtPeriodEnd = subscription.cancel_at_period_end;
+          user.cancel_at_period_end_flag = cancelAtPeriodEnd; 
+        } else {
+           user.cancel_at_period_end_flag = ''; 
+        }
+      }
+      // console.log("Users fetched:", resp.length, resp[0]);
       res.status(200).json({ resp });
     } catch (error: any) {
       res.status(404).json({ message: error.message });
@@ -484,6 +499,21 @@ app.post(
   }
 );
 
+app.get(
+  "/getPercentageSearchCredits",
+  adminVerification,
+  async (req: Request, res: Response) => {
+    try {
+      if (!process.env.PERCENTAGE) {
+        throw new Error("No search credit percentage set");
+      }
+      res.status(200).json({ resp: process.env.PERCENTAGE });
+    } catch (error: any) {
+      res.status(404).json({ error: error.message });
+    }
+  }
+);
+
 app.post(
   "/changePercentageSearchCredits",
   adminVerification,
@@ -508,7 +538,7 @@ app.post(
       );
       fs.writeFileSync(envFilePath, newEnvFileContent);
 
-      res.status(200).json({ resp: "Updated searchcredits percentage" });
+      res.status(200).json({ resp: "Updated search credit percentage" });
     } catch (error: any) {
       res.status(400).json({ error: error.message });
     }
