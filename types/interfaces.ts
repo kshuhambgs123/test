@@ -105,7 +105,7 @@ export interface SubscriptionUpgradeRequest {
   customerId: string;
   newTierName: string;
   userId: string;
-  refferal: string
+  referral: string
 }
 
 export interface LeadStatusResponse {
