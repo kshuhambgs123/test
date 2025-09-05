@@ -15,6 +15,7 @@ import { request } from "http";
 import { safeParse, z } from "zod";
 import { getIndustryIds } from "../db/industry";
 import axios from "axios";
+import { Country, State, City } from 'country-state-city';
 dotenv.config();
 
 const app = express.Router();
@@ -132,29 +133,6 @@ app.post(
           return;
       }
 
-      // const newLog = await createLogOnly(
-      //     data.record_id,
-      //     userID,
-      //     searchCost,
-      //     0,
-      //     ,
-      //     fileName,
-      //     searchCost,
-      //     "url",
-      //     user.name,
-      //     user.email
-      //   );
-
-      // Log credit transaction
-      // await createCreditTransaction({
-      //   user_id: userID,
-      //   type: "search_deduct",
-      //   amount: searchCost,
-      //   reason: "Sample search query",
-      //   direction: "debit",
-      // });
-
-
       // ---------------- CALL SEARCH API ----------------
 
       const searchAPI = process.env.SAMPLESEARCHAUTOMATIONAPI as string;
@@ -177,168 +155,69 @@ app.post(
       res.status(200).json({
           message: `People fetched successfully`,
           data: response.data,
-        //   balance: {
-        //   subscriptionCredits: updatedUser?.subscriptionCredits ?? 0,
-        //   purchasedCredits: updatedUser?.credits ?? 0,
-        //   totalCredits:
-        //     (updatedUser?.subscriptionCredits ?? 0) + (updatedUser?.credits ?? 0),
-        // },
       });
       return;
 
-    //   const deductionResult = await deductCredits(userID, credits);
-    //   if (!deductionResult.success) {
-    //     res.status(400).json({ message: "Failed to deduct credits" });
-    //     return;
-    //   }
-
-    //   const newLog = await createLogOnly(
-    //     data.record_id,
-    //     userID,
-    //     noOfLeadsNumeric,
-    //     0,
-    //     apolloLink,
-    //     fileName,
-    //     credits,
-    //     "url",
-    //     user.name,
-    //     user.email
-    //   );
-
-      // Get updated user data to show current balances
-    //   const updatedUser = await getUser(userID);
-    //   if (!updatedUser) {
-    //     res
-    //       .status(400)
-    //       .json({ message: "Failed to retrieve updated user data" });
-    //     return;
-    //   }
-
-    //   let additionalInformation = "";
-    //   if (userSubscriptionCredits >= credits) {
-    //     additionalInformation = "Used subscription credits.";
-    //   } else if (userSubscriptionCredits > 0) {
-    //     additionalInformation = "Subscription Exhausted. Using bought credits.";
-    //   } else {
-    //     additionalInformation = "Used bought credits.";
-    //   }
-
-      // res.status(200).json({
-      //   message: `People fetched successfully`,
-        // balance: {
-        //   subscriptionCredits: updatedUser.subscriptionCredits ?? 0,
-        //   purchasedCredits: updatedUser.credits,
-        //   totalCredits:
-        //     (updatedUser.subscriptionCredits ?? 0) + updatedUser.credits,
-        // },
-        // additional_information: additionalInformation,
-        // log: newLog,
-      //   data: data
-      // });
-
-    //   setImmediate(async () => {
-    //     console.log("Checking lead status for logID: ", newLog?.LogID);
-    //     const resp = await checkLeadStatus(newLog as Logs);
-    //     console.log("Lead status checked for logID: ", newLog?.LogID);
-    //   });
     } catch (error: any) {
       res.status(500).json({ message: error.message });
     }
   }
 );
 
-/*
-async function checkLeadStatus(log: Logs) {
-  const leadStatusAPI = process.env.SEARCHAUTOMATIONAPISTATUS as string;
+app.get(
+  "/location",
+  verifySessionToken,
+  async (req: Request, res: Response): Promise<void> => {
+    try {
+      const userID = (req as any).user.id;
+      const user = await getUser(userID);
 
-  try {
-    const checkStatus = async (): Promise<LeadStatusResponse | null> => {
-      const maxTries = 1440;
-      let tries = 0;
-      let response: LeadStatusResponse | null = null;
+      if (!user) {
+        res.status(404).json({ message: "User not found" });
+        return;
+      }
 
-      while (tries < maxTries) {
-        const res = await fetch(leadStatusAPI, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ record_id: log.LogID }),
+      const search = req.query.search as string | undefined;
+
+      if (!search) {
+        // No search query — mask the data
+        res.json({
+          countries: [],
+          states: [],
+          cities: []
         });
-
-        if (res.ok) {
-          response = (await res.json()) as LeadStatusResponse;
-
-          if (
-            response.enrichment_status == "Completed" ||
-            response.enrichment_status == "Failed" ||
-            response.enrichment_status == "Cancelled"
-          ) {
-            return response;
-          }
-
-          tries++;
-          await new Promise((r) => setTimeout(r, 1 * 60 * 1000));
-        }
-
-        tries++;
-        await new Promise((r) => setTimeout(r, 1 * 60 * 1000));
-      }
-      const upLead = await updateLog(log.LogID, "Failed", "", 0);
-      if (!upLead) {
-        return null;
-      }
-      return null;
-    };
-    const response = await checkStatus();
-
-    if (!response) {
-      return;
-    }
-
-    if (
-      response.enrichment_status == "Cancelled" ||
-      response.enrichment_status == "Failed"
-    ) {
-      const upLead = await updateLog(
-        log.LogID,
-        response.enrichment_status,
-        response.spreadsheet_url,
-        response.enriched_records
-      );
-      if (!upLead) {
-        return;
-      }
-      const state = await updateCredits(upLead.userID, upLead.creditsUsed);
-      if (!state) {
         return;
       }
 
-      console.log("Lead status failed for logID: ", log.LogID);
-    }
+      // Build regex (escape special characters)
+      const escapedSearch = search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const searchRegex = new RegExp(escapedSearch, 'i'); // 'i' for case-insensitive
 
-    if (response.enrichment_status == "Completed") {
-      const updateLead = await updateLog(
-        log.LogID,
-        response.enrichment_status,
-        response.spreadsheet_url,
-        response.enriched_records
+      // Filter using regex
+      const countries = Country.getAllCountries().filter((country) =>
+        searchRegex.test(country.name)
       );
 
-      if (!updateLead) {
-        return;
-      }
+      const states = State.getAllStates().filter((state) =>
+        searchRegex.test(state.name)
+      );
 
-      console.log("Lead status completed for logID: ", log.LogID);
-    }
-  } catch (err: any) {
-    const updateLead = await updateLog(log.LogID, "Failed", "", 0);
-    if (!updateLead) {
+      const cities = City.getAllCities().filter((city) =>
+        searchRegex.test(city.name)
+      );
+
+      res.json({
+        countries,
+        states,
+        cities
+      });
       return;
+
+    } catch (error) {
+      console.error("Error fetching location data:", error);
+      res.status(500).json({ message: "Internal server error" });
     }
-    return;
   }
-}
-*/
+);
 
 export default app;
