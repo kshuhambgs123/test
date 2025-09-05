@@ -4,7 +4,7 @@ import userAuth from "../middleware/supabaseAuth";
 import express, { Request, Response } from "express";
 import Stripe from "stripe";
 import { addCredits, addCreditsWithSearchCredits, getUser } from "../db/user";
-import { createSubscriptionInvoiceFromWebhook } from './billing';
+import { createSubscriptionInvoiceFromWebhook } from "./billing";
 import { stripeClient } from "../payments/stripe";
 import {
   getSubscriptionTiers,
@@ -34,403 +34,500 @@ dotenv.config({ path: path.resolve(__dirname, "../.env") });
 
 const app = express.Router();
 const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET as string;
-const percentageOfCredits = process.env.PERCENTAGE ? parseInt(process.env.PERCENTAGE, 10) : 10;
+const percentageOfCredits = process.env.PERCENTAGE
+  ? parseInt(process.env.PERCENTAGE, 10)
+  : 10;
 
-app.post("/searchLeadsConfirmPayment", express.raw({ type: "application/json" }), async (req: Request, res: Response) => {
-  let eventId: string | null = null;
+app.post(
+  "/searchLeadsConfirmPayment",
+  express.raw({ type: "application/json" }),
+  async (req: Request, res: Response) => {
+    let eventId: string | null = null;
 
-  console.log("-------- INSIDE /searchLeadsConfirmPayment --------");
-
-  try {
-    const sig = req.headers["stripe-signature"];
-    if (!sig) {
-      return res.status(400).json({ error: "Missing Stripe signature" });
-    }
-
-    let event: Stripe.Event;
+    console.log("-------- INSIDE /searchLeadsConfirmPayment --------");
 
     try {
-      console.log("Raw body type:",req.body, typeof req.body, Buffer.isBuffer(req.body));
+      const sig = req.headers["stripe-signature"];
+      if (!sig) {
+        return res.status(400).json({ error: "Missing Stripe signature" });
+      }
 
-      event = stripeClient.webhooks.constructEvent(
-        req.body,
-        sig,
-        endpointSecret
-      );
+      let event: Stripe.Event;
 
-      console.log("Event :", event);
+      try {
+        console.log(
+          "Raw body type:",
+          req.body,
+          typeof req.body,
+          Buffer.isBuffer(req.body)
+        );
 
-      eventId = event.id;
-    } catch (err) {
-      console.error("Webhook signature verification failed:", err);
-      return res.status(400).json({ error: "Invalid signature" });
-    }
+        event = stripeClient.webhooks.constructEvent(
+          req.body,
+          sig,
+          endpointSecret
+        );
 
-    if (await isEventProcessed(eventId)) {
-      console.log(`Event ${eventId} already processed, skipping`);
-      return res.status(200).json({ received: true, duplicate: true });
-    }
+        console.log("Event :", event);
 
-    console.log(`Processing webhook: ${event.type} (ID: ${eventId})`);
+        eventId = event.id;
+      } catch (err) {
+        console.error("Webhook signature verification failed:", err);
+        return res.status(400).json({ error: "Invalid signature" });
+      }
 
-    let SUBSCRIPTION_TIERS: any = null;
-    if (event.type.includes("subscription") || event.type.includes("invoice")) {
-      SUBSCRIPTION_TIERS = await getSubscriptionTiers();
-    }
+      if (await isEventProcessed(eventId)) {
+        console.log(`Event ${eventId} already processed, skipping`);
+        return res.status(200).json({ received: true, duplicate: true });
+      }
 
-    switch (event.type) {
-      /**
-       * PAYMENT_INTENT.SUCCEEDED - Handle one-time credit purchases only
-       * Subscription payments are handled via invoice.payment_succeeded
-       */
-      case "payment_intent.succeeded":
-        try {
-          const paymentIntent = event.data.object as Stripe.PaymentIntent;
-          console.log("-- PAYMENT INTENT ID :", paymentIntent.id);
+      console.log(`Processing webhook: ${event.type} (ID: ${eventId})`);
 
-          // Skip subscription-related payments - handled by invoice webhook
-          if (
-            paymentIntent.description === "Subscription update" ||
-            paymentIntent.description?.includes("subscription")
-          ) {
-            console.log(
-              `Skipping subscription payment intent: ${paymentIntent.id}`
-            );
-            await markEventProcessed(eventId, {
-              eventId: event.id,
-              timestamp: event.created,
-              eventType: event.type,
-              processedAt: Date.now(),
-            });
-            return res
-              .status(200)
-              .json({ received: true, subscription_handled_elsewhere: true });
-          }
+      let SUBSCRIPTION_TIERS: any = null;
+      if (
+        event.type.includes("subscription") ||
+        event.type.includes("invoice")
+      ) {
+        SUBSCRIPTION_TIERS = await getSubscriptionTiers();
+      }
 
-          // Handle EnrichMinion credits
-          if (
-            paymentIntent.description === "Payment for EnrichMinion Credits"
-          ) {
-            console.log(
-              `Processing EnrichMinion credit payment: ${paymentIntent.id}`
-            );
-            await markEventProcessed(eventId, {
-              eventId: event.id,
-              timestamp: event.created,
-              eventType: event.type,
-              processedAt: Date.now(),
-            });
-            return res
-              .status(200)
-              .json({ received: true, reason: "for enrichminion" });
-          }
+      switch (event.type) {
+        /**
+         * PAYMENT_INTENT.SUCCEEDED - Handle one-time credit purchases only
+         * Subscription payments are handled via invoice.payment_succeeded
+         */
+        case "payment_intent.succeeded":
+          try {
+            const paymentIntent = event.data.object as Stripe.PaymentIntent;
+            console.log("-- PAYMENT INTENT ID :", paymentIntent.id);
 
-          // Handle regular credit purchases
-          const metadata =
-            paymentIntent.metadata as unknown as StripePaymentMetadata;
-          if (metadata && !metadata.subscriptionPlan && metadata.credits) {
-            // Verify payment actually succeeded with charge
+            // Skip subscription-related payments - handled by invoice webhook
             if (
-              !paymentIntent.latest_charge ||
-              paymentIntent.amount_received <= 0
+              paymentIntent.description === "Subscription update" ||
+              paymentIntent.description?.includes("subscription")
             ) {
+              console.log(
+                `Skipping subscription payment intent: ${paymentIntent.id}`
+              );
+              await markEventProcessed(eventId, {
+                eventId: event.id,
+                timestamp: event.created,
+                eventType: event.type,
+                processedAt: Date.now(),
+              });
+              return res
+                .status(200)
+                .json({ received: true, subscription_handled_elsewhere: true });
+            }
+
+            // Handle EnrichMinion credits
+            if (
+              paymentIntent.description === "Payment for EnrichMinion Credits"
+            ) {
+              console.log(
+                `Processing EnrichMinion credit payment: ${paymentIntent.id}`
+              );
+              await markEventProcessed(eventId, {
+                eventId: event.id,
+                timestamp: event.created,
+                eventType: event.type,
+                processedAt: Date.now(),
+              });
+              return res
+                .status(200)
+                .json({ received: true, reason: "for enrichminion" });
+            }
+
+            // Handle regular credit purchases
+            const metadata =
+              paymentIntent.metadata as unknown as StripePaymentMetadata;
+            if (metadata && !metadata.subscriptionPlan && metadata.credits) {
+              // Verify payment actually succeeded with charge
+              if (
+                !paymentIntent.latest_charge ||
+                paymentIntent.amount_received <= 0
+              ) {
+                console.error(
+                  `❌ PaymentIntent ${paymentIntent.id} shows succeeded but no charge/amount!`
+                );
+                return res
+                  .status(200)
+                  .json({ error: "No actual payment detected" });
+              }
+
+              console.log(
+                `💰 Verified credit purchase: $${
+                  paymentIntent.amount_received / 100
+                } (Charge: ${paymentIntent.latest_charge})`
+              );
+
+              const updatedCredits = await addCreditsWithSearchCredits(
+                parseFloat(metadata.credits),
+                parseFloat(
+                  (
+                    (parseFloat(metadata.credits) * percentageOfCredits) /
+                    100
+                  ).toString()
+                ),
+                metadata.userId
+              );
+
+              if (!updatedCredits) {
+                console.error(
+                  `Failed to add credits for user ${metadata.userId}, payment ${paymentIntent.id}`
+                );
+                return res.status(200).json({ error: "Failed to add credits" });
+              }
+
+              console.log(
+                `✅ Added ${metadata.credits} credits to user ${metadata.userId}`
+              );
+              await markEventProcessed(eventId, {
+                eventId: event.id,
+                timestamp: event.created,
+                eventType: event.type,
+                processedAt: Date.now(),
+              });
+              return res.status(200).json({ received: true });
+            }
+
+            console.warn(`Unhandled payment intent: ${paymentIntent.id}`);
+          } catch (error) {
+            console.error("Error processing payment_intent.succeeded:", error);
+            return res.status(200).json({ error: "Payment processing failed" });
+          }
+          break;
+
+        /**
+         * INVOICE.PAYMENT_SUCCEEDED - The authoritative payment confirmation
+         * This is the ONLY place where we confirm subscription payments
+         */
+        case "invoice.payment_succeeded":
+          try {
+            const invoice = event.data.object as Stripe.Invoice;
+            console.log("-- INVOICE ID :", invoice.id);
+
+            // CRITICAL: Verify actual payment before processing
+            // Handle both manual payments and auto-charged payments
+            if (invoice.amount_paid <= 0) {
               console.error(
-                `❌ PaymentIntent ${paymentIntent.id} shows succeeded but no charge/amount!`
+                `❌ Invoice ${invoice.id} shows payment succeeded but no amount paid!`
               );
               return res
                 .status(200)
                 .json({ error: "No actual payment detected" });
             }
 
-            console.log(
-              `💰 Verified credit purchase: $${
-                paymentIntent.amount_received / 100
-              } (Charge: ${paymentIntent.latest_charge})`
-            );
-
-            const updatedCredits = await addCreditsWithSearchCredits(
-              parseFloat(metadata.credits),
-              parseFloat(((parseFloat(metadata.credits) * percentageOfCredits) / 100).toString()),
-              metadata.userId
-            );
-
-            if (!updatedCredits) {
-              console.error(
-                `Failed to add credits for user ${metadata.userId}, payment ${paymentIntent.id}`
-              );
-              return res.status(200).json({ error: "Failed to add credits" });
+            // For auto-charged invoices, check payment_intent instead of charge
+            let paymentConfirmation = "unknown";
+            if (invoice.charge) {
+              paymentConfirmation = `charge: ${invoice.charge}`;
+            } else if (invoice.payment_intent) {
+              paymentConfirmation = `payment_intent: ${invoice.payment_intent}`;
+            } else {
+              paymentConfirmation = "auto-paid via saved payment method";
             }
 
             console.log(
-              `✅ Added ${metadata.credits} credits to user ${metadata.userId}`
-            );
-            await markEventProcessed(eventId, {
-              eventId: event.id,
-              timestamp: event.created,
-              eventType: event.type,
-              processedAt: Date.now(),
-            });
-            return res.status(200).json({ received: true });
-          }
-
-          console.warn(`Unhandled payment intent: ${paymentIntent.id}`);
-        } catch (error) {
-          console.error("Error processing payment_intent.succeeded:", error);
-          return res.status(200).json({ error: "Payment processing failed" });
-        }
-        break;
-
-      /**
-       * INVOICE.PAYMENT_SUCCEEDED - The authoritative payment confirmation
-       * This is the ONLY place where we confirm subscription payments
-       */
-      case "invoice.payment_succeeded":
-        try {
-          const invoice = event.data.object as Stripe.Invoice;
-          console.log("-- INVOICE ID :", invoice.id);
-
-          // CRITICAL: Verify actual payment before processing
-          // Handle both manual payments and auto-charged payments
-          if (invoice.amount_paid <= 0) {
-            console.error(
-              `❌ Invoice ${invoice.id} shows payment succeeded but no amount paid!`
-            );
-            return res
-              .status(200)
-              .json({ error: "No actual payment detected" });
-          }
-
-          // For auto-charged invoices, check payment_intent instead of charge
-          let paymentConfirmation = "unknown";
-          if (invoice.charge) {
-            paymentConfirmation = `charge: ${invoice.charge}`;
-          } else if (invoice.payment_intent) {
-            paymentConfirmation = `payment_intent: ${invoice.payment_intent}`;
-          } else {
-            paymentConfirmation = "auto-paid via saved payment method";
-          }
-
-          console.log(
-            `💰 Verified invoice payment: $${
-              invoice.amount_paid / 100
-            } (${paymentConfirmation})`
-          );
-
-          // Additional verification for auto-charged payments
-          if (invoice.status === "paid" && invoice.amount_paid > 0) {
-            console.log(
-              `✅ Payment confirmed: Invoice status is 'paid' with amount $${
+              `💰 Verified invoice payment: $${
                 invoice.amount_paid / 100
-              }`
-            );
-          } else {
-            console.error(
-              `❌ Payment verification failed: status=${invoice.status}, amount=${invoice.amount_paid}`
-            );
-            return res
-              .status(200)
-              .json({ error: "Payment verification failed" });
-          }
-
-          /**
-           * Handle subscription creation payments (including upgrades)
-           */
-          if (
-            invoice.subscription &&
-            invoice.billing_reason === "subscription_create"
-          ) {
-            console.log(
-              `🎉 Processing subscription creation payment for: ${invoice.subscription}`
+              } (${paymentConfirmation})`
             );
 
-            const subscription = await stripeClient.subscriptions.retrieve(
-              invoice.subscription as string
-            );
-            const subMetadata =
-              subscription.metadata as unknown as SubscriptionMetadata;
+            // Additional verification for auto-charged payments
+            if (invoice.status === "paid" && invoice.amount_paid > 0) {
+              console.log(
+                `✅ Payment confirmed: Invoice status is 'paid' with amount $${
+                  invoice.amount_paid / 100
+                }`
+              );
+            } else {
+              console.error(
+                `❌ Payment verification failed: status=${invoice.status}, amount=${invoice.amount_paid}`
+              );
+              return res
+                .status(200)
+                .json({ error: "Payment verification failed" });
+            }
 
-            if (subMetadata?.userId) {
-              const tier =
-                SUBSCRIPTION_TIERS?.[
-                  subMetadata.tierName as keyof typeof SUBSCRIPTION_TIERS
-                ];
+            /**
+             * Handle subscription creation payments (including upgrades)
+             */
+            if (
+              invoice.subscription &&
+              invoice.billing_reason === "subscription_create"
+            ) {
+              console.log(
+                `🎉 Processing subscription creation payment for: ${invoice.subscription}`
+              );
 
-              // Check if this is an upgrade scenario
-              if (subMetadata.isUpgrade === "true" && subMetadata.upgradeFrom) {
-                console.log(
-                  `🔄 Processing upgrade swap: replacing ${subMetadata.upgradeFrom} with ${subscription.id}`
-                );
+              const subscription = await stripeClient.subscriptions.retrieve(
+                invoice.subscription as string
+              );
+              const subMetadata =
+                subscription.metadata as unknown as SubscriptionMetadata;
 
-                // Cancel old subscription with retry logic
-                await cancelOldSubscriptionWithRetry(
-                  subMetadata.upgradeFrom,
-                  6
-                );
+              if (subMetadata?.userId) {
+                const tier =
+                  SUBSCRIPTION_TIERS?.[
+                    subMetadata.tierName as keyof typeof SUBSCRIPTION_TIERS
+                  ];
 
-                // Update user with new subscription
-                await updateUserSubscriptionWithTimestamp(subMetadata.userId, {
-                  stripeCustomerId: subscription.customer as string,
-                  stripeSubscriptionId: subscription.id,
-                  subscriptionStatus: "active",
-                  subscriptionPlan: subMetadata.tierName,
-                  subscriptionCredits: tier?.credits || 0,
-                  subscriptionCurrentPeriodEnd: new Date(
-                    subscription.current_period_end * 1000
-                  ),
-                  last_webhook_timestamp: event.created,
-                  last_processed_event_id: event.id,
-                  upgrade_lock: false, // Clear upgrade lock
-                  searchCredits: parseFloat(((parseInt(tier.credits) * percentageOfCredits) / 100).toString()),
-                  });
+                // Check if this is an upgrade scenario
+                if (
+                  subMetadata.isUpgrade === "true" &&
+                  subMetadata.upgradeFrom
+                ) {
+                  console.log(
+                    `🔄 Processing upgrade swap: replacing ${subMetadata.upgradeFrom} with ${subscription.id}`
+                  );
 
-                console.log(
-                  `✅ Completed upgrade swap for user ${subMetadata.userId}: ${
-                    subMetadata.tierName
-                  } with ${tier?.credits || 0} credits`
-                );
-              } else {
-                // Regular subscription creation
-                await updateUserSubscriptionWithTimestamp(subMetadata.userId, {
-                  stripeCustomerId: subscription.customer as string,
-                  stripeSubscriptionId: subscription.id,
-                  subscriptionStatus: "active",
-                  subscriptionPlan: subMetadata.tierName,
-                  subscriptionCredits: tier?.credits || 0,
-                  subscriptionCurrentPeriodEnd: new Date(
-                    subscription.current_period_end * 1000
-                  ),
-                  last_webhook_timestamp: event.created,
-                  last_processed_event_id: event.id,
-                  searchCredits: parseFloat(((parseInt(tier.credits) * percentageOfCredits) / 100).toString()),
-                  });
+                  // Cancel old subscription with retry logic
+                  await cancelOldSubscriptionWithRetry(
+                    subMetadata.upgradeFrom,
+                    6
+                  );
 
-                console.log(
-                  `✅ Activated subscription for user ${subMetadata.userId}: ${
-                    subMetadata.tierName
-                  } with ${tier?.credits || 0} credits`
-                );
-                // const subscription = await stripeClient.subscriptions.retrieve(
-                //   invoice.subscription as string
-                // );
-                // const subMetadata =
-                //   subscription.metadata as unknown as SubscriptionMetadata;
-                if(subMetadata?.userId && subscription.id) {  
-                  console.log(`✅ Invoice logged called for user ${subMetadata.userId} `);
-                  const invoiceLogged =  await createSubscriptionInvoiceFromWebhook(subMetadata.userId, subscription.id);
+                  // Update user with new subscription
+                  await updateUserSubscriptionWithTimestamp(
+                    subMetadata.userId,
+                    {
+                      stripeCustomerId: subscription.customer as string,
+                      stripeSubscriptionId: subscription.id,
+                      subscriptionStatus: "active",
+                      subscriptionPlan: subMetadata.tierName,
+                      subscriptionCredits: tier?.credits || 0,
+                      subscriptionCurrentPeriodEnd: new Date(
+                        subscription.current_period_end * 1000
+                      ),
+                      last_webhook_timestamp: event.created,
+                      last_processed_event_id: event.id,
+                      upgrade_lock: false, // Clear upgrade lock
+                      searchCredits: parseFloat(
+                        (
+                          (parseInt(tier.credits) * percentageOfCredits) /
+                          100
+                        ).toString()
+                      ),
+                    }
+                  );
+
+                  console.log(
+                    `✅ Completed upgrade swap for user ${
+                      subMetadata.userId
+                    }: ${subMetadata.tierName} with ${
+                      tier?.credits || 0
+                    } credits`
+                  );
+                } else {
+                  // Regular subscription creation
+                  await updateUserSubscriptionWithTimestamp(
+                    subMetadata.userId,
+                    {
+                      stripeCustomerId: subscription.customer as string,
+                      stripeSubscriptionId: subscription.id,
+                      subscriptionStatus: "active",
+                      subscriptionPlan: subMetadata.tierName,
+                      subscriptionCredits: tier?.credits || 0,
+                      subscriptionCurrentPeriodEnd: new Date(
+                        subscription.current_period_end * 1000
+                      ),
+                      last_webhook_timestamp: event.created,
+                      last_processed_event_id: event.id,
+                      searchCredits: parseFloat(
+                        (
+                          (parseInt(tier.credits) * percentageOfCredits) /
+                          100
+                        ).toString()
+                      ),
+                    }
+                  );
+
+                  console.log(
+                    `✅ Activated subscription for user ${
+                      subMetadata.userId
+                    }: ${subMetadata.tierName} with ${
+                      tier?.credits || 0
+                    } credits`
+                  );
+                  // const subscription = await stripeClient.subscriptions.retrieve(
+                  //   invoice.subscription as string
+                  // );
+                  // const subMetadata =
+                  //   subscription.metadata as unknown as SubscriptionMetadata;
+                  if (subMetadata?.userId && subscription.id) {
+                    console.log(
+                      `✅ Invoice logged called for user ${subMetadata.userId} `
+                    );
+                    const invoiceLogged =
+                      await createSubscriptionInvoiceFromWebhook(
+                        subMetadata.userId,
+                        subscription.id
+                      );
+                  }
                 }
               }
             }
-          }
 
-          /**
-           * Handle subscription upgrade payments (legacy pending upgrade system)
-           */
-          if (
-            invoice.subscription &&
-            invoice.billing_reason === "subscription_update"
-          ) {
-            console.log(
-              `🔄 Processing legacy subscription upgrade payment for: ${invoice.subscription}`
-            );
-
-            const pendingUpgrade = await getPendingUpgrade(
-              invoice.subscription as string
-            );
-
-            if (pendingUpgrade) {
+            /**
+             * Handle subscription upgrade payments (legacy pending upgrade system)
+             */
+            if (
+              invoice.subscription &&
+              invoice.billing_reason === "subscription_update"
+            ) {
               console.log(
-                `✅ Found pending upgrade for user ${pendingUpgrade.userId} to ${pendingUpgrade.targetTierName}`
+                `🔄 Processing legacy subscription upgrade payment for: ${invoice.subscription}`
               );
 
-              await updateUserSubscriptionWithTimestamp(pendingUpgrade.userId, {
-                subscriptionCredits: pendingUpgrade.targetCredits,
-                subscriptionPlan: pendingUpgrade.targetTierName,
-                subscriptionStatus: "active",
-                last_webhook_timestamp: event.created,
-                last_processed_event_id: event.id,
-                searchCredits: parseFloat((((pendingUpgrade.targetCredits) * percentageOfCredits) / 100).toString()),
-              });
-
-              console.log(
-                `🎉 Applied legacy upgrade: ${pendingUpgrade.targetTierName} with ${pendingUpgrade.targetCredits} credits`
+              const pendingUpgrade = await getPendingUpgrade(
+                invoice.subscription as string
               );
 
-              await deletePendingUpgrade(invoice.subscription as string);
-              console.log(
-                `🗑️ Cleaned up pending upgrade for subscription ${invoice.subscription}`
-              );
-            } else {
-              console.warn(
-                `⚠️ No pending upgrade found for subscription ${invoice.subscription}`
-              );
+              if (pendingUpgrade) {
+                console.log(
+                  `✅ Found pending upgrade for user ${pendingUpgrade.userId} to ${pendingUpgrade.targetTierName}`
+                );
+
+                await updateUserSubscriptionWithTimestamp(
+                  pendingUpgrade.userId,
+                  {
+                    subscriptionCredits: pendingUpgrade.targetCredits,
+                    subscriptionPlan: pendingUpgrade.targetTierName,
+                    subscriptionStatus: "active",
+                    last_webhook_timestamp: event.created,
+                    last_processed_event_id: event.id,
+                    searchCredits: parseFloat(
+                      (
+                        (pendingUpgrade.targetCredits * percentageOfCredits) /
+                        100
+                      ).toString()
+                    ),
+                  }
+                );
+
+                console.log(
+                  `🎉 Applied legacy upgrade: ${pendingUpgrade.targetTierName} with ${pendingUpgrade.targetCredits} credits`
+                );
+
+                await deletePendingUpgrade(invoice.subscription as string);
+                console.log(
+                  `🗑️ Cleaned up pending upgrade for subscription ${invoice.subscription}`
+                );
+              } else {
+                console.warn(
+                  `⚠️ No pending upgrade found for subscription ${invoice.subscription}`
+                );
+              }
             }
+
+            /**
+             * Handle subscription renewal payments
+             */
+            if (
+              invoice.subscription &&
+              invoice.billing_reason === "subscription_cycle"
+            ) {
+              console.log(
+                `🔄 Processing subscription renewal for: ${invoice.subscription}`
+              );
+
+              const customer = await stripeClient.customers.retrieve(
+                invoice.customer as string
+              );
+              if (customer && !customer.deleted) {
+                const user = await getUserByStripeCustomerId(customer.id);
+                if (user?.subscriptionPlan) {
+                  const tier =
+                    SUBSCRIPTION_TIERS?.[
+                      user.subscriptionPlan as keyof typeof SUBSCRIPTION_TIERS
+                    ];
+                  if (tier) {
+                    await resetMonthlyCredits(user.UserID, tier.credits);
+                    console.log(
+                      `✅ Reset monthly credits to ${tier.credits} for user ${user.UserID}`
+                    );
+                  }
+                }
+              }
+            }
+
+            await markEventProcessed(event.id, {
+              eventId: event.id,
+              timestamp: event.created,
+              eventType: event.type,
+              subscriptionId: invoice.subscription as string,
+              processedAt: Date.now(),
+            });
+
+            return res
+              .status(200)
+              .json({ received: true, payment_confirmed: true });
+          } catch (error) {
+            console.error("Error processing invoice payment succeeded:", error);
+            return res.status(200).json({ error: "Invoice processing failed" });
           }
+          break;
 
-          /**
-           * Handle subscription renewal payments
-           */
-          if (
-            invoice.subscription &&
-            invoice.billing_reason === "subscription_cycle"
-          ) {
+        /**
+         * SUBSCRIPTION.CREATED/UPDATED - Only for metadata tracking
+         * Payment confirmation is handled in invoice.payment_succeeded
+         */
+        case "customer.subscription.created":
+        case "customer.subscription.updated":
+          try {
+            const subscription = event.data.object as Stripe.Subscription;
             console.log(
-              `🔄 Processing subscription renewal for: ${invoice.subscription}`
+              `📝 Subscription ${event.type}: ${subscription.id} (status: ${subscription.status})`
             );
 
-            const customer = await stripeClient.customers.retrieve(
-              invoice.customer as string
-            );
-            if (customer && !customer.deleted) {
-              const user = await getUserByStripeCustomerId(customer.id);
-              if (user?.subscriptionPlan) {
-                const tier =
-                  SUBSCRIPTION_TIERS?.[
-                    user.subscriptionPlan as keyof typeof SUBSCRIPTION_TIERS
-                  ];
-                if (tier) {
-                  await resetMonthlyCredits(user.UserID, tier.credits);
+            // Skip if pending update exists - handled by invoice webhook
+            if (subscription.pending_update) {
+              console.log(
+                `Subscription ${subscription.id} has pending update, skipping processing`
+              );
+              await markEventProcessed(event.id, {
+                eventId: event.id,
+                timestamp: event.created,
+                eventType: event.type,
+                subscriptionId: subscription.id,
+                processedAt: Date.now(),
+              });
+              return res.status(200).json({ received: true, pending: true });
+            }
+
+            // Only process non-payment related changes (status updates, etc.)
+            if (subscription.status !== "active") {
+              const subMetadata =
+                subscription.metadata as unknown as SubscriptionMetadata;
+
+              if (subMetadata?.userId) {
+                const user = await getUserByStripeCustomerId(
+                  subscription.customer as string
+                );
+
+                if (user && user.stripeSubscriptionId === subscription.id) {
+                  // This is their current subscription, update their status
+                  await updateUserSubscriptionWithTimestamp(
+                    subMetadata.userId,
+                    {
+                      subscriptionStatus: subscription.status,
+                      last_webhook_timestamp: event.created,
+                      last_processed_event_id: event.id,
+                    }
+                  );
+
                   console.log(
-                    `✅ Reset monthly credits to ${tier.credits} for user ${user.UserID}`
+                    `Updated subscription status for user ${subMetadata.userId}: ${subscription.status}`
+                  );
+                } else {
+                  console.log(
+                    `🗑️ Ignoring status update for non-current subscription ${subscription.id} (status: ${subscription.status})`
                   );
                 }
               }
             }
-          }
 
-          await markEventProcessed(event.id, {
-            eventId: event.id,
-            timestamp: event.created,
-            eventType: event.type,
-            subscriptionId: invoice.subscription as string,
-            processedAt: Date.now(),
-          });
-
-          return res
-            .status(200)
-            .json({ received: true, payment_confirmed: true });
-        } catch (error) {
-          console.error("Error processing invoice payment succeeded:", error);
-          return res.status(200).json({ error: "Invoice processing failed" });
-        }
-        break;
-
-      /**
-       * SUBSCRIPTION.CREATED/UPDATED - Only for metadata tracking
-       * Payment confirmation is handled in invoice.payment_succeeded
-       */
-      case "customer.subscription.created":
-      case "customer.subscription.updated":
-        try {
-          const subscription = event.data.object as Stripe.Subscription;
-          console.log(
-            `📝 Subscription ${event.type}: ${subscription.id} (status: ${subscription.status})`
-          );
-
-          // Skip if pending update exists - handled by invoice webhook
-          if (subscription.pending_update) {
-            console.log(
-              `Subscription ${subscription.id} has pending update, skipping processing`
-            );
             await markEventProcessed(event.id, {
               eventId: event.id,
               timestamp: event.created,
@@ -438,210 +535,174 @@ app.post("/searchLeadsConfirmPayment", express.raw({ type: "application/json" })
               subscriptionId: subscription.id,
               processedAt: Date.now(),
             });
-            return res.status(200).json({ received: true, pending: true });
+          } catch (error) {
+            console.error("Error processing subscription event:", error);
+            return res
+              .status(200)
+              .json({ error: "Subscription processing failed" });
           }
+          break;
 
-          // Only process non-payment related changes (status updates, etc.)
-          if (subscription.status !== "active") {
-            const subMetadata =
-              subscription.metadata as unknown as SubscriptionMetadata;
+        /**
+         * Handle subscription cancellation
+         */
+        case "customer.subscription.deleted":
+          try {
+            const deletedSub = event.data.object as Stripe.Subscription;
+            const delMetadata =
+              deletedSub.metadata as unknown as SubscriptionMetadata;
 
-            if (subMetadata?.userId) {
+            if (delMetadata?.userId) {
+              // ✅ CRITICAL: Only clear user data if this was their CURRENT subscription
               const user = await getUserByStripeCustomerId(
-                subscription.customer as string
+                deletedSub.customer as string
               );
 
-              if (user && user.stripeSubscriptionId === subscription.id) {
-                // This is their current subscription, update their status
-                await updateUserSubscriptionWithTimestamp(subMetadata.userId, {
-                  subscriptionStatus: subscription.status,
-                  last_webhook_timestamp: event.created,
-                  last_processed_event_id: event.id,
-                });
-
+              if (user && user.stripeSubscriptionId === deletedSub.id) {
                 console.log(
-                  `Updated subscription status for user ${subMetadata.userId}: ${subscription.status}`
+                  `🎯 Processing cancellation of current subscription ${deletedSub.id} for user ${delMetadata.userId}`
                 );
-              } else {
-                console.log(
-                  `🗑️ Ignoring status update for non-current subscription ${subscription.id} (status: ${subscription.status})`
-                );
-              }
-            }
-          }
-
-          await markEventProcessed(event.id, {
-            eventId: event.id,
-            timestamp: event.created,
-            eventType: event.type,
-            subscriptionId: subscription.id,
-            processedAt: Date.now(),
-          });
-        } catch (error) {
-          console.error("Error processing subscription event:", error);
-          return res
-            .status(200)
-            .json({ error: "Subscription processing failed" });
-        }
-        break;
-
-      /**
-       * Handle subscription cancellation
-       */
-      case "customer.subscription.deleted":
-        try {
-          const deletedSub = event.data.object as Stripe.Subscription;
-          const delMetadata =
-            deletedSub.metadata as unknown as SubscriptionMetadata;
-
-          if (delMetadata?.userId) {
-            // ✅ CRITICAL: Only clear user data if this was their CURRENT subscription
-            const user = await getUserByStripeCustomerId(
-              deletedSub.customer as string
-            );
-
-            if (user && user.stripeSubscriptionId === deletedSub.id) {
-              console.log(
-                `🎯 Processing cancellation of current subscription ${deletedSub.id} for user ${delMetadata.userId}`
-              );
-              await updateUserSubscription(delMetadata.userId, {
+                await updateUserSubscription(delMetadata.userId, {
                   subscriptionStatus: null,
                   stripeSubscriptionId: null,
                   subscriptionPlan: null,
                   subscriptionCurrentPeriodEnd: null,
-                  subscriptionCredits: 0,  // Expire credits when subscription ends
-              });
+                  subscriptionCredits: 0, // Expire credits when subscription ends
+                });
 
                 console.log(
                   `✅ Expired credits at subscription end and canceled subscription for user ${delMetadata.userId} | Canceled subscription id :${deletedSub.id}`
                 );
-            } else {
-              // This was an old subscription (probably from upgrade), ignore it
-              console.log(
-                `🗑️ Deleted old subscription ${deletedSub.id} for user ${delMetadata.userId}, keeping current subscription intact`
-              );
+              } else {
+                // This was an old subscription (probably from upgrade), ignore it
+                console.log(
+                  `🗑️ Deleted old subscription ${deletedSub.id} for user ${delMetadata.userId}, keeping current subscription intact`
+                );
+              }
             }
+
+            await markEventProcessed(event.id, {
+              eventId: event.id,
+              timestamp: event.created,
+              eventType: event.type,
+              processedAt: Date.now(),
+            });
+          } catch (error) {
+            console.error("Error processing subscription deleted:", error);
+            return res
+              .status(200)
+              .json({ error: "Subscription cancellation failed" });
           }
+          break;
 
-          await markEventProcessed(event.id, {
-            eventId: event.id,
-            timestamp: event.created,
-            eventType: event.type,
-            processedAt: Date.now(),
-          });
-        } catch (error) {
-          console.error("Error processing subscription deleted:", error);
-          return res
-            .status(200)
-            .json({ error: "Subscription cancellation failed" });
-        }
-        break;
+        /**
+         * Handle payment failures - Clear upgrade locks for failed upgrade attempts
+         */
+        case "invoice.payment_failed":
+          try {
+            const failedInvoice = event.data.object as Stripe.Invoice;
 
-      /**
-       * Handle payment failures - Clear upgrade locks for failed upgrade attempts
-       */
-      case "invoice.payment_failed":
-        try {
-          const failedInvoice = event.data.object as Stripe.Invoice;
-
-          if (failedInvoice.subscription) {
-            const subscription = await stripeClient.subscriptions.retrieve(
-              failedInvoice.subscription as string
-            );
-            const subMetadata =
-              subscription.metadata as unknown as SubscriptionMetadata;
-
-            // Clear upgrade lock if this was a failed upgrade attempt
-            if (subMetadata?.isUpgrade === "true" && subMetadata?.userId) {
-              await setUpgradeLock(subMetadata.userId, false);
-              console.log(
-                `🔓 Cleared upgrade lock for failed upgrade attempt: user ${subMetadata.userId}`
-              );
-
-              // Auto-delete failed upgrade subscription
-              await stripeClient.subscriptions.cancel(
+            if (failedInvoice.subscription) {
+              const subscription = await stripeClient.subscriptions.retrieve(
                 failedInvoice.subscription as string
               );
-              console.log(
-                `🗑️ Auto-deleted failed upgrade subscription: ${failedInvoice.subscription}`
-              );
-            } else {
-              // Handle regular subscription payment failures
-              const customer = await stripeClient.customers.retrieve(
-                failedInvoice.customer as string
-              );
+              const subMetadata =
+                subscription.metadata as unknown as SubscriptionMetadata;
 
-              if (customer && !customer.deleted) {
-                const user = await getUserByStripeCustomerId(customer.id);
+              // Clear upgrade lock if this was a failed upgrade attempt
+              if (subMetadata?.isUpgrade === "true" && subMetadata?.userId) {
+                await setUpgradeLock(subMetadata.userId, false);
+                console.log(
+                  `🔓 Cleared upgrade lock for failed upgrade attempt: user ${subMetadata.userId}`
+                );
 
-                if (user) {
-                  if (failedInvoice.billing_reason === "subscription_create") {
-                    console.log(
-                      `❌ Initial subscription payment failed for user ${user.UserID}, cleaning up`
-                    );
+                // Auto-delete failed upgrade subscription
+                await stripeClient.subscriptions.cancel(
+                  failedInvoice.subscription as string
+                );
+                console.log(
+                  `🗑️ Auto-deleted failed upgrade subscription: ${failedInvoice.subscription}`
+                );
+              } else {
+                // Handle regular subscription payment failures
+                const customer = await stripeClient.customers.retrieve(
+                  failedInvoice.customer as string
+                );
 
-                    await stripeClient.subscriptions.cancel(
-                      failedInvoice.subscription as string
-                    );
-                    await updateUserSubscription(user.UserID, {
-                      subscriptionStatus: null,
-                      stripeSubscriptionId: null,
-                      subscriptionPlan: null,
-                      subscriptionCredits: 0,
-                    });
+                if (customer && !customer.deleted) {
+                  const user = await getUserByStripeCustomerId(customer.id);
 
-                    console.log(
-                      `Cleaned up failed initial subscription for user ${user.UserID}`
-                    );
-                  } else {
-                    await updateUserSubscription(user.UserID, {
-                      subscriptionStatus: "past_due",
-                    });
+                  if (user) {
+                    if (
+                      failedInvoice.billing_reason === "subscription_create"
+                    ) {
+                      console.log(
+                        `❌ Initial subscription payment failed for user ${user.UserID}, cleaning up`
+                      );
 
-                    console.log(
-                      `Marked subscription as past_due for user ${user.UserID}`
-                    );
+                      await stripeClient.subscriptions.cancel(
+                        failedInvoice.subscription as string
+                      );
+                      await updateUserSubscription(user.UserID, {
+                        subscriptionStatus: null,
+                        stripeSubscriptionId: null,
+                        subscriptionPlan: null,
+                        subscriptionCredits: 0,
+                      });
+
+                      console.log(
+                        `Cleaned up failed initial subscription for user ${user.UserID}`
+                      );
+                    } else {
+                      await updateUserSubscription(user.UserID, {
+                        subscriptionStatus: "past_due",
+                      });
+
+                      console.log(
+                        `Marked subscription as past_due for user ${user.UserID}`
+                      );
+                    }
                   }
                 }
               }
             }
+
+            await markEventProcessed(event.id, {
+              eventId: event.id,
+              timestamp: event.created,
+              eventType: event.type,
+              subscriptionId: failedInvoice.subscription as string,
+              processedAt: Date.now(),
+            });
+          } catch (error) {
+            console.error("Error processing invoice payment failed:", error);
+            return res
+              .status(200)
+              .json({ error: "Failed payment processing failed" });
           }
+          break;
 
-          await markEventProcessed(event.id, {
-            eventId: event.id,
-            timestamp: event.created,
-            eventType: event.type,
-            subscriptionId: failedInvoice.subscription as string,
-            processedAt: Date.now(),
-          });
-        } catch (error) {
-          console.error("Error processing invoice payment failed:", error);
-          return res
-            .status(200)
-            .json({ error: "Failed payment processing failed" });
-        }
-        break;
+        default:
+          console.log(`Unhandled webhook event type: ${event.type}`);
+          break;
+      }
 
-      default:
-        console.log(`Unhandled webhook event type: ${event.type}`);
-        break;
+      await markEventProcessed(eventId, {
+        eventId: event.id,
+        timestamp: event.created,
+        eventType: event.type,
+        processedAt: Date.now(),
+      });
+
+      return res.status(200).json({ received: true });
+    } catch (error: any) {
+      console.error(`Webhook processing error (Event ID: ${eventId}):`, error);
+      return res
+        .status(200)
+        .json({ error: `Internal Server Error: ${error.message}` });
     }
-
-    await markEventProcessed(eventId, {
-      eventId: event.id,
-      timestamp: event.created,
-      eventType: event.type,
-      processedAt: Date.now(),
-    });
-
-    return res.status(200).json({ received: true });
-  } catch (error: any) {
-    console.error(`Webhook processing error (Event ID: ${eventId}):`, error);
-    return res
-      .status(200)
-      .json({ error: `Internal Server Error: ${error.message}` });
   }
-});
+);
 
 /**
  * CREATE SUBSCRIPTION - Immediate Payment Required
@@ -652,8 +713,12 @@ app.post(
   userAuth,
   async (req: Request, res: Response) => {
     try {
-      const { customerId, tierName, userId, referral }: SubscriptionCreateRequest =
-        req.body;
+      const {
+        customerId,
+        tierName,
+        userId,
+        referral,
+      }: SubscriptionCreateRequest = req.body;
 
       const SUBSCRIPTION_TIERS = await getSubscriptionTiers();
 
@@ -678,6 +743,14 @@ app.post(
           userId: userId,
           tierName: tierName,
           credits: tier.credits.toString(),
+        },
+        payment_intent_data: {
+          metadata: {
+            _afficoneRef: referral || null,
+            userId: userId,
+            tierName: tierName,
+            credits: tier.credits.toString(),
+          },
         },
       });
 
@@ -714,8 +787,12 @@ app.post(
   userAuth,
   async (req: Request, res: Response) => {
     try {
-      const { customerId, newTierName, userId, referral }: SubscriptionUpgradeRequest =
-        req.body;
+      const {
+        customerId,
+        newTierName,
+        userId,
+        referral,
+      }: SubscriptionUpgradeRequest = req.body;
 
       // Check for upgrade lock first
       const user = await getUserByStripeCustomerId(customerId);
@@ -779,6 +856,18 @@ app.post(
             ? latestInvoice.payment_intent.client_secret
             : null;
 
+        await stripeClient.paymentIntents.update(
+          newSubscription.latest_invoice.payment_intent.id,
+          {
+            metadata: {
+              _afficoneRef: referral || null,
+              userId: userId,
+              tierName: newTierName,
+              credits: newTier.credits.toString(),
+            },
+          }
+        );
+
         console.log(
           `✅ Created new subscription ${newSubscription.id} for upgrade (status: ${newSubscription.status}) for user ${userId}`
         );
@@ -822,21 +911,25 @@ app.post(
         res.status(400).json({ message: "Missing subscription Id" });
         return;
       }
-      
+
       const user_id = (req as any).user.id;
       const user = await getUser(user_id);
       if (!user) {
-            res.status(404).json({ message: "User not found" });
-            return;
+        res.status(404).json({ message: "User not found" });
+        return;
       }
 
       if (user.stripeSubscriptionId !== subscriptionId) {
-        res.status(403).json({ message: "You are not allowed to cancel this subscription" });
+        res
+          .status(403)
+          .json({ message: "You are not allowed to cancel this subscription" });
         return;
       }
 
       console.log(
-        `---------------- Canceling subscription: ${subscriptionId} for user: ${userId ? userId : user_id}`
+        `---------------- Canceling subscription: ${subscriptionId} for user: ${
+          userId ? userId : user_id
+        }`
       );
 
       // const canceledSubscription = await stripeClient.subscriptions.cancel(
@@ -848,15 +941,15 @@ app.post(
       // );
 
       const canceledAtPeriodEnd = await stripeClient.subscriptions.update(
-          subscriptionId,
-          {
-            cancel_at_period_end: true,
-          }
+        subscriptionId,
+        {
+          cancel_at_period_end: true,
+        }
       );
 
       await updateUserSubscription(user_id, {
-                  subscriptionStatus: 'canceled',
-          });
+        subscriptionStatus: "canceled",
+      });
       console.log(
         `✅ Canceled subscription ${subscriptionId} - webhook will handle database cleanup`
       );
@@ -1041,10 +1134,14 @@ app.post(
         EUR: parseFloat(process.env.EUR_RATE || defaultRates.EUR.toString()),
       };
 
-      const currencyRate = rates[selectedCurrency] ? rates[selectedCurrency] : defaultRates[selectedCurrency];
+      const currencyRate = rates[selectedCurrency]
+        ? rates[selectedCurrency]
+        : defaultRates[selectedCurrency];
 
       // Calculate amount for Stripe (in smallest currency unit)
-      const amountCalculated = Math.round(amountInUSDPerThousandCredit * currencyRate * 100);
+      const amountCalculated = Math.round(
+        amountInUSDPerThousandCredit * currencyRate * 100
+      );
 
       const paymentIntent = await stripeClient.paymentIntents.create({
         amount: amount ? amount : amountCalculated,
@@ -1198,7 +1295,7 @@ const RATE_LIMIT_MAX = 5; // max requests per window
 
 async function isRateLimited(userKey: string): Promise<boolean> {
   const now = Date.now();
-  
+
   const key = `ratelimit:${userKey}`;
 
   const incrementResp = await makeUpstashRequest(["INCR", key]);
@@ -1222,16 +1319,16 @@ app.post("/retrieveCoupon", userAuth, async (req: Request, res: Response) => {
     const { couponCode } = req.body;
 
     if (!couponCode) {
-        return res.status(400).json({ message: "Missing coupon code" });
+      return res.status(400).json({ message: "Missing coupon code" });
     }
-    
+
     const userKey = (req as any).user?.id || req.ip;
 
     if (await isRateLimited(userKey)) {
-        res.status(429).json({
-          message: "Too many coupon requests. Please try again in 1 minute.",
-        });
-        return;
+      res.status(429).json({
+        message: "Too many coupon requests. Please try again in 1 minute.",
+      });
+      return;
     }
 
     const coupon = await stripeClient.coupons.retrieve(couponCode);
