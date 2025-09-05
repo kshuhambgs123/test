@@ -6,7 +6,8 @@ import { createUser, getUser, refreshAPIKey } from "../db/user";
 import verifySessionToken from "../middleware/supabaseAuth";
 import { stripeClient } from "../payments/stripe";
 import { prisma } from "../db/index";
-dotenv.config();
+import path from "path";
+dotenv.config({ path: path.resolve(__dirname, "../.env") });
 
 const app = express.Router();
 
@@ -146,6 +147,28 @@ app.get(
       res.status(200).json({ costPerLead });
     } catch (error: any) {
       res.status(500).json({ message: error.message });
+    }
+  }
+);
+
+app.get(
+  "/getCurrencyRate",
+  verifySessionToken,
+  async (req: Request, res: Response) => {
+    try {
+      if (!process.env.USD_RATE || !process.env.INR_RATE || !process.env.GBP_RATE || !process.env.EUR_RATE) {
+        throw new Error("One or more currency rates are not set");
+      }
+
+      res.status(200).json({
+        usd: parseFloat(process.env.USD_RATE),
+        inr: parseFloat(process.env.INR_RATE),
+        gbp: parseFloat(process.env.GBP_RATE),
+        eur: parseFloat(process.env.EUR_RATE),
+      });
+
+    } catch (error: any) {
+      res.status(404).json({ error: error.message });
     }
   }
 );
