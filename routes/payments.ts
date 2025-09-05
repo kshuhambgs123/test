@@ -652,7 +652,7 @@ app.post(
   userAuth,
   async (req: Request, res: Response) => {
     try {
-      const { customerId, tierName, userId }: SubscriptionCreateRequest =
+      const { customerId, tierName, userId, referral }: SubscriptionCreateRequest =
         req.body;
 
       const SUBSCRIPTION_TIERS = await getSubscriptionTiers();
@@ -674,6 +674,7 @@ app.post(
         payment_behavior: "default_incomplete", // CRITICAL: Requires immediate payment
         expand: ["latest_invoice.payment_intent"],
         metadata: {
+          _afficoneRef: referral || null,
           userId: userId,
           tierName: tierName,
           credits: tier.credits.toString(),
@@ -713,7 +714,7 @@ app.post(
   userAuth,
   async (req: Request, res: Response) => {
     try {
-      const { customerId, newTierName, userId }: SubscriptionUpgradeRequest =
+      const { customerId, newTierName, userId, referral }: SubscriptionUpgradeRequest =
         req.body;
 
       // Check for upgrade lock first
@@ -762,6 +763,7 @@ app.post(
           payment_behavior: "default_incomplete", // Immediate payment required
           expand: ["latest_invoice.payment_intent"],
           metadata: {
+            _afficoneRef: referral || null,
             userId: userId,
             tierName: newTierName,
             credits: newTier.credits.toString(),
