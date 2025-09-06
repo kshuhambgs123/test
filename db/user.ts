@@ -189,3 +189,40 @@ export async function getCredits(userID: string): Promise<number | null> {
     throw new Error(error.message);
   }
 }
+
+const KNOWN_SOURCES = [
+  'Social Media',
+  'Friend/Colleague',
+  'Online Search',
+  'Email Campaign',
+];
+
+export async function getHeardFromStats() {
+  const users = await prisma.user.findMany({
+    where: {
+      heardFrom: {
+        not: null,
+      },
+    },
+    select: {
+      heardFrom: true,
+    },
+  });
+
+  // Count each category
+  const counts: Record<string, number> = {};
+
+  for (const user of users) {
+    const key = KNOWN_SOURCES.includes(user.heardFrom!)
+      ? user.heardFrom!
+      : 'Other';
+    counts[key] = (counts[key] || 0) + 1;
+  }
+
+  // Convert to array like: [{ heardFrom: 'Social Media', count: 12 }, ...]
+  const result = Object.entries(counts)
+    .map(([heardFrom, count]) => ({ heardFrom, count }))
+    .sort((a, b) => a.heardFrom.localeCompare(b.heardFrom));
+
+  return result;
+}
