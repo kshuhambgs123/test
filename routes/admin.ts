@@ -27,6 +27,7 @@ import {
   createCompleteLog,
   getAllLogs,
   getAllLogsByUserID,
+  getAllUsersSearchLogs,
   getAllV1Logs,
   getOneLog,
   updateLog,
@@ -1152,6 +1153,24 @@ app.get(
       res.status(200).json({ stats });
     } catch (error: any) {
       res.status(500).json({ message: error.message });
+    }
+  }
+);
+
+app.get(
+  "/getAllUsersSearchLog",
+  adminVerification,
+  async (req: Request, res: Response) => {
+    //TESTED
+    try {
+      const page = parseInt(req.query.page as string) || 1;
+      const pageSize = parseInt(req.query.pageSize as string) || 10;
+
+      const resp = await getAllUsersSearchLogs(page, pageSize);
+
+      res.status(200).json(resp);
+    } catch (error: any) {
+      res.status(404).json({ message: error.message });
     }
   }
 );

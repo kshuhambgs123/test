@@ -223,6 +223,14 @@ model LatestFundingStageFacet {
   @@map("latest_funding_stage_facets")
 }
 
+model search_logs {
+  id            String    @id @default(dbgenerated("gen_random_uuid()"))
+  user_id       String?
+  search_filter String?
+  pass_filter   String?
+  result        String?
+  createdAt     DateTime? @default(now()) @db.Timestamptz(6)
+}
 
 model Technology {
   id             String   @id @default(cuid()) 

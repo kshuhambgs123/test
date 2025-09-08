@@ -147,7 +147,7 @@ app.post("/searchLeadsConfirmPayment", express.raw({ type: "application/json" })
                 paymentIntent.amount_received / 100
               } (Charge: ${paymentIntent.latest_charge})`
             );
-
+          /*
             const updatedCredits = await addCreditsWithSearchCredits(
               parseFloat(metadata.credits),
               parseFloat(((parseFloat(metadata.credits) * percentageOfCredits) / 100).toString()),
@@ -163,7 +163,7 @@ app.post("/searchLeadsConfirmPayment", express.raw({ type: "application/json" })
 
             console.log(
               `✅ Added ${metadata.credits} credits to user ${metadata.userId}`
-            );
+            ); */
             await markEventProcessed(eventId, {
               eventId: event.id,
               timestamp: event.created,
@@ -652,7 +652,7 @@ app.post(
   userAuth,
   async (req: Request, res: Response) => {
     try {
-      const { customerId, tierName, userId }: SubscriptionCreateRequest =
+      const { customerId, tierName, userId, referral }: SubscriptionCreateRequest =
         req.body;
 
       const SUBSCRIPTION_TIERS = await getSubscriptionTiers();
@@ -674,18 +674,44 @@ app.post(
         payment_behavior: "default_incomplete", // CRITICAL: Requires immediate payment
         expand: ["latest_invoice.payment_intent"],
         metadata: {
+          _afficoneRef: referral || null,
           userId: userId,
           tierName: tierName,
           credits: tier.credits.toString(),
         },
       });
 
-      const latestInvoice = subscription.latest_invoice as Stripe.Invoice;
-      const clientSecret =
-        latestInvoice?.payment_intent &&
-        typeof latestInvoice.payment_intent === "object"
-          ? latestInvoice.payment_intent.client_secret
-          : null;
+      const latestInvoice =
+        subscription.latest_invoice as Stripe.Invoice | null;
+
+      let clientSecret: string | null = null;
+      let paymentIntentId: string | null = null;
+
+      if (
+        latestInvoice &&
+        typeof latestInvoice !== "string" &&
+        latestInvoice.payment_intent
+      ) {
+        if (typeof latestInvoice.payment_intent !== "string") {
+          clientSecret = latestInvoice.payment_intent.client_secret ?? null;
+          paymentIntentId = latestInvoice.payment_intent.id;
+        } else {
+          paymentIntentId = latestInvoice.payment_intent;
+        }
+      }
+
+      // Attach extra metadata to payment intent (if needed)
+      if (paymentIntentId) {
+        await stripeClient.paymentIntents.update(paymentIntentId, {
+          metadata: {
+            userId,
+            tierName,
+            credits: tier.credits.toString(),
+            _afficoneRef: referral || null,
+            flow: "new_subscription",
+          },
+        });
+      }
 
       console.log(
         `✅ Created subscription ${subscription.id} (status: ${subscription.status}) for user ${userId}`
@@ -713,7 +739,7 @@ app.post(
   userAuth,
   async (req: Request, res: Response) => {
     try {
-      const { customerId, newTierName, userId }: SubscriptionUpgradeRequest =
+      const { customerId, newTierName, userId, referral }: SubscriptionUpgradeRequest =
         req.body;
 
       // Check for upgrade lock first
@@ -762,6 +788,7 @@ app.post(
           payment_behavior: "default_incomplete", // Immediate payment required
           expand: ["latest_invoice.payment_intent"],
           metadata: {
+            _afficoneRef: referral || null,
             userId: userId,
             tierName: newTierName,
             credits: newTier.credits.toString(),
@@ -770,12 +797,35 @@ app.post(
           },
         });
 
-        const latestInvoice = newSubscription.latest_invoice as Stripe.Invoice;
-        const clientSecret =
-          latestInvoice?.payment_intent &&
-          typeof latestInvoice.payment_intent === "object"
-            ? latestInvoice.payment_intent.client_secret
-            : null;
+        const latestInvoice =
+          newSubscription.latest_invoice as Stripe.Invoice | null;
+
+        let clientSecret: string | null = null;
+        let paymentIntentId: string | null = null;
+
+        if (
+          latestInvoice &&
+          typeof latestInvoice !== "string" &&
+          latestInvoice.payment_intent
+        ) {
+          if (typeof latestInvoice.payment_intent !== "string") {
+            clientSecret = latestInvoice.payment_intent.client_secret ?? null;
+            paymentIntentId = latestInvoice.payment_intent.id;
+          } else {
+            paymentIntentId = latestInvoice.payment_intent; // string ID
+          }
+        }
+
+        if (paymentIntentId) {
+          await stripeClient.paymentIntents.update(paymentIntentId, {
+            metadata: {
+              _afficoneRef: referral || null,
+              userId,
+              tierName: newTierName,
+              credits: newTier.credits.toString(),
+            },
+          });
+        }
 
         console.log(
           `✅ Created new subscription ${newSubscription.id} for upgrade (status: ${newSubscription.status}) for user ${userId}`

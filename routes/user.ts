@@ -2,7 +2,7 @@
 
 import dotenv from "dotenv";
 import express, { Request, Response } from "express";
-import { createUser, getUser, refreshAPIKey } from "../db/user";
+import { createUser, getHeardFromStats, getUser, refreshAPIKey } from "../db/user";
 import verifySessionToken from "../middleware/supabaseAuth";
 import { stripeClient } from "../payments/stripe";
 import { prisma } from "../db/index";
@@ -235,6 +235,37 @@ app.get(
         return;
       }
       res.status(200).json({ hasActiveSubscription: true, message: "Subscription is already active"});
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  }
+);
+
+app.get(
+  "/heard-from",
+  // verifySessionToken,
+  async (req: Request, res: Response): Promise<void> => {
+    try {
+      // const userID = (req as any).user.id;
+      // const user = await getUser(userID);
+
+      // if (!user) {
+      //   res.status(404).json({ message: "User not found" });
+      //   return;
+      // }
+
+      const resp = await getHeardFromStats();
+   
+     if (!resp || resp.length === 0) {
+        res.status(200).json([]); 
+      } else {
+        res.status(200).json(
+          resp.map(row => ({
+            heardFrom: row.heardFrom,
+            count: Number(row.count),
+          }))
+        );
+      }
     } catch (error: any) {
       res.status(500).json({ message: error.message });
     }
