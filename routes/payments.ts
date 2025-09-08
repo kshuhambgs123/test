@@ -147,7 +147,7 @@ app.post("/searchLeadsConfirmPayment", express.raw({ type: "application/json" })
                 paymentIntent.amount_received / 100
               } (Charge: ${paymentIntent.latest_charge})`
             );
-
+          /*
             const updatedCredits = await addCreditsWithSearchCredits(
               parseFloat(metadata.credits),
               parseFloat(((parseFloat(metadata.credits) * percentageOfCredits) / 100).toString()),
@@ -163,7 +163,7 @@ app.post("/searchLeadsConfirmPayment", express.raw({ type: "application/json" })
 
             console.log(
               `✅ Added ${metadata.credits} credits to user ${metadata.userId}`
-            );
+            ); */
             await markEventProcessed(eventId, {
               eventId: event.id,
               timestamp: event.created,
