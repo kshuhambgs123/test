@@ -254,3 +254,60 @@ export async function createLogOnly(
     throw new Error(error.message);
   }
 }
+
+export async function searchLogs(
+              userID: string,
+              search_filter?: string,
+              pass_filter?: string,
+              result_length?: string
+): Promise<any> {
+  try {
+    const log = await prisma.search_logs.create({
+      data: {
+        user_id : userID,
+        search_filter : search_filter,
+        pass_filter : pass_filter,
+        result : result_length
+      },
+    });
+    return log;
+  } catch (error: any) {
+    throw new Error(error.message);
+  }
+}
+
+function safeJSONParse(value: string | null | undefined) {
+  try {
+    return value ? JSON.parse(value) : null;
+  } catch (e) {
+    console.warn('Failed to parse JSON:', value);
+    return value;
+  }
+}
+
+
+export async function getAllUsersSearchLogs(page = 1, pageSize = 10) {
+  const skip = (page - 1) * pageSize;
+  const rawData = await prisma.search_logs.findMany({
+    skip,
+    take: pageSize,
+    orderBy: {
+      createdAt: 'desc', 
+    },
+  });
+
+  const data = rawData.map((log: any) => ({
+      ...log,
+      search_filter: safeJSONParse(log.search_filter),
+      pass_filter: safeJSONParse(log.pass_filter),
+    }));
+
+ const total = await prisma.search_logs.count();
+ return {
+    data,
+    page,
+    pageSize,
+    totalPages: Math.ceil(total / pageSize),
+    total,
+  };
+}

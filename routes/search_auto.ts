@@ -5,7 +5,7 @@ import dotenv from "dotenv";
 import express, { Request, Response } from "express";
 import formdata from "form-data";
 import { updateCredits } from "../db/admin";
-import { createLogOnly, updateLog } from "../db/log";
+import { createLogOnly, searchLogs, updateLog } from "../db/log";
 import { deductCredits, deductSearchCredits } from "../db/subscription";
 import { getUser } from "../db/user";
 import { getFundingValues } from "../db/funding";
@@ -151,7 +151,14 @@ app.post(
       if (!response || response.status !== 200) {
         throw new Error("Failed to fetch");
       }
-      
+
+      const searchLog = await searchLogs(
+              userID,
+              JSON.stringify(req.body),
+              JSON.stringify(finalBody),
+              (response.data.people.length || null).toString()
+            );
+ 
       res.status(200).json({
           message: `People fetched successfully`,
           data: response.data,
