@@ -70,12 +70,12 @@ export async function addCredits(
         UserID: userId,
       },
       data: {
-        credits: {
-          increment: Math.abs(addCreds),
-        },
-        TotalCreditsBought: {
-          increment: Math.abs(addCreds),
-        },
+        // credits: {
+        //   increment: Math.abs(addCreds),
+        // },
+        // TotalCreditsBought: {
+        //   increment: Math.abs(addCreds),
+        // },
       },
     });
 
@@ -106,15 +106,15 @@ export async function addCreditsWithSearchCredits(
         UserID: userId,
       },
       data: {
-        credits: {
-          increment: Math.abs(addCreds),
-        },
-        searchCredits: {
-          increment: Math.abs(searchCreds),
-        },
-        TotalCreditsBought: {
-          increment: Math.abs(addCreds),
-        },
+        // credits: {
+        //   increment: Math.abs(addCreds),
+        // },
+        // searchCredits: {
+        //   increment: Math.abs(searchCreds),
+        // },
+        // TotalCreditsBought: {
+        //   increment: Math.abs(addCreds),
+        // },
       },
     });
 

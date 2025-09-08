@@ -30,6 +30,7 @@ import { User } from "@prisma/client";
 import { prisma } from "../db/index";
 import dotenv from "dotenv";
 import path from "path";
+import { getUserById } from "../db/admin";
 dotenv.config({ path: path.resolve(__dirname, "../.env") });
 
 const app = express.Router();
@@ -261,6 +262,12 @@ app.post("/searchLeadsConfirmPayment", express.raw({ type: "application/json" })
                   `🔄 Processing upgrade swap: replacing ${subMetadata.upgradeFrom} with ${subscription.id}`
                 );
 
+                // Added to test
+                const subscription_dtls = await getUserById(
+                        subMetadata.userId,
+                );
+                //
+
                 // Cancel old subscription with retry logic
                 await cancelOldSubscriptionWithRetry(
                   subMetadata.upgradeFrom,
@@ -273,7 +280,7 @@ app.post("/searchLeadsConfirmPayment", express.raw({ type: "application/json" })
                   stripeSubscriptionId: subscription.id,
                   subscriptionStatus: "active",
                   subscriptionPlan: subMetadata.tierName,
-                  subscriptionCredits: tier?.credits || 0,
+                  subscriptionCredits: tier?.credits ?? 0 + (subscription_dtls ? subscription_dtls.subscriptionCredits ?? 0 : 0),
                   subscriptionCurrentPeriodEnd: new Date(
                     subscription.current_period_end * 1000
                   ),
