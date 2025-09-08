@@ -6,6 +6,7 @@ import {
   setCachedTiers,
   clearCachedTiers,
 } from "../caching/redis";
+import { getUserById } from "./admin";
 
 const percentageOfCredits = process.env.PERCENTAGE ? parseInt(process.env.PERCENTAGE, 10) : 10;
 async function fetchDynamicTiers() {
@@ -161,7 +162,10 @@ export async function updateUserSubscriptionWithTimestamp(
         subscriptionData.last_webhook_timestamp * 1000
       );
     }
+    const userData = await getUserById(userId);
 
+    console.log(`✅ Existing user data credits , search , totalbought, subscription`, userData?.credits, userData?.searchCredits, userData?.TotalCreditsBought, userData?.subscriptionCredits);
+    
     const user = await prisma.user.update({
       where: { UserID: userId },
       data: {
@@ -173,7 +177,7 @@ export async function updateUserSubscriptionWithTimestamp(
     });
 
     console.log(
-      `✅ Updated user ${userId} with timestamp ${subscriptionData.last_webhook_timestamp}`
+      `✅ Updated user ${userId} with timestamp ${subscriptionData.last_webhook_timestamp} and ${user.credits} and ${user.searchCredits} and ${user.subscriptionCredits} and ${user.TotalCreditsBought}`
     );
     return user;
   } catch (error: any) {
