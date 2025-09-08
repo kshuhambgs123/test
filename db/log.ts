@@ -287,6 +287,8 @@ function safeJSONParse(value: string | null | undefined) {
 
 
 export async function getAllUsersSearchLogs(page = 1, pageSize = 10) {
+  
+  /*
   const skip = (page - 1) * pageSize;
   const rawData = await prisma.search_logs.findMany({
     skip,
@@ -309,5 +311,40 @@ export async function getAllUsersSearchLogs(page = 1, pageSize = 10) {
     pageSize,
     totalPages: Math.ceil(total / pageSize),
     total,
+  };
+  */
+
+  const offset = (page - 1) * pageSize;
+
+  const [rawData, total] = await Promise.all([
+    prisma.search_logs.findMany({
+      skip: offset,
+      take: pageSize,
+      orderBy: {
+        createdAt: 'desc',
+      },
+    }),
+    prisma.search_logs.count(),
+  ]);
+
+  // Parse JSON fields
+  const data = rawData.map((log) => ({
+    ...log,
+    search_filter: safeJSONParse(log.search_filter),
+    pass_filter: safeJSONParse(log.pass_filter),
+  }));
+
+  const pageTotal = Math.ceil(total / pageSize);
+
+  return {
+    itemsReceived: data.length,
+    curPage: page,
+    nextPage: page < pageTotal ? page + 1 : null,
+    prevPage: page > 1 ? page - 1 : null,
+    offset,
+    perPage: pageSize,
+    itemsTotal: total,
+    pageTotal,
+    data,
   };
 }
