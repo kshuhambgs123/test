@@ -164,7 +164,7 @@ export async function updateUserSubscriptionWithTimestamp(
     }
     const userData = await getUserById(userId);
 
-    console.log(`✅ Existing user data credits , search , totalbought, subscription`, userData?.credits, userData?.searchCredits, userData?.TotalCreditsBought, userData?.subscriptionCredits);
+    console.log(`✅ Existing user data credits , search , totalbought, subscription`, userData?.credits, userData?.searchCredits, userData?.TotalCreditsBought, userData?.subscriptionCredits, "check2 : ", dbData.subscriptionCredits);
     
     const user = await prisma.user.update({
       where: { UserID: userId },
