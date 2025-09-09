@@ -267,6 +267,7 @@ app.post("/searchLeadsConfirmPayment", express.raw({ type: "application/json" })
                 const subscription_dtls = await getUserById(
                         subMetadata.userId,
                 );
+                console.log("previous subscription_dtls : ", subscription_dtls?.subscriptionCredits)
                 //
 
                 // Cancel old subscription with retry logic
@@ -276,12 +277,14 @@ app.post("/searchLeadsConfirmPayment", express.raw({ type: "application/json" })
                 );
 
                 // Update user with new subscription
+                console.log("previous subscription_dtls check1 : ",  (parseInt(tier?.credits ?? "0") || 0) + (subscription_dtls?.subscriptionCredits ?? 0))
+                //
                 await updateUserSubscriptionWithTimestamp(subMetadata.userId, {
                   stripeCustomerId: subscription.customer as string,
                   stripeSubscriptionId: subscription.id,
                   subscriptionStatus: "active",
                   subscriptionPlan: subMetadata.tierName,
-                  subscriptionCredits: tier?.credits ?? 0 + (subscription_dtls ? subscription_dtls.subscriptionCredits ?? 0 : 0),
+                  subscriptionCredits: (parseInt(tier?.credits ?? "0") || 0) + (subscription_dtls?.subscriptionCredits ?? 0),
                   subscriptionCurrentPeriodEnd: new Date(
                     subscription.current_period_end * 1000
                   ),
