@@ -90,10 +90,11 @@ app.post("/searchLeadsConfirmPayment", express.raw({ type: "application/json" })
           console.log("-- PAYMENT INTENT ID :", paymentIntent.id);
 
           // Skip subscription-related payments - handled by invoice webhook
-          if (
-            paymentIntent.description === "Subscription update" ||
+          if (paymentIntent.invoice || paymentIntent.metadata?.subscriptionPlan ||
+                paymentIntent.description?.toLowerCase().includes("subscription")
+            /* paymentIntent.description === "Subscription update" ||
             paymentIntent.description?.includes("subscription")
-          ) {
+          */) {
             console.log(
               `Skipping subscription payment intent: ${paymentIntent.id}`
             );
