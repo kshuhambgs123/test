@@ -106,18 +106,18 @@ export async function addCreditsWithSearchCredits(
         UserID: userId,
       },
       data: {
-        // credits: {
-        //   increment: Math.abs(addCreds),
-        // },
-        // searchCredits: {
-        //   increment: Math.abs(searchCreds),
-        // },
-        // TotalCreditsBought: {
-        //   increment: Math.abs(addCreds),
-        // },
+        credits: {
+          increment: Math.abs(addCreds),
+        },
+        searchCredits: {
+          increment: Math.abs(searchCreds),
+        },
+        TotalCreditsBought: {
+          increment: Math.abs(addCreds),
+        },
       },
     });
-
+    console.log("pay as you go update ", data)
     return data;
   } catch (error: any) {
     throw new Error(error.message);
