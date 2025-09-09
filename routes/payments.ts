@@ -682,7 +682,7 @@ app.post(
         payment_behavior: "default_incomplete", // CRITICAL: Requires immediate payment
         expand: ["latest_invoice.payment_intent"],
         metadata: {
-          _afficoneRef: referral || null,
+          _afficoneRef: referral ?? "",
           userId: userId,
           tierName: tierName,
           credits: tier.credits.toString(),
@@ -715,7 +715,7 @@ app.post(
             userId,
             tierName,
             credits: tier.credits.toString(),
-            _afficoneRef: referral || null,
+            _afficoneRef: referral ?? "",
             flow: "new_subscription",
           },
         });
@@ -796,7 +796,7 @@ app.post(
           payment_behavior: "default_incomplete", // Immediate payment required
           expand: ["latest_invoice.payment_intent"],
           metadata: {
-            _afficoneRef: referral || null,
+            _afficoneRef: referral ?? "",
             userId: userId,
             tierName: newTierName,
             credits: newTier.credits.toString(),
@@ -827,7 +827,7 @@ app.post(
         if (paymentIntentId) {
           await stripeClient.paymentIntents.update(paymentIntentId, {
             metadata: {
-              _afficoneRef: referral || null,
+              _afficoneRef: referral ?? "",
               userId,
               tierName: newTierName,
               credits: newTier.credits.toString(),
@@ -1111,7 +1111,7 @@ app.post(
           enabled: automaticPayment,
         },
         metadata: {
-          _afficoneRef: referral || null,
+          _afficoneRef: referral ?? "",
           credits: credits,
           currency: currency,
           userId: userID,
