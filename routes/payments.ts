@@ -514,13 +514,13 @@ app.post("/searchLeadsConfirmPayment", express.raw({ type: "application/json" })
               console.log(
                 `🎯 Processing cancellation of current subscription ${deletedSub.id} for user ${delMetadata.userId}`
               );
-              await updateUserSubscription(delMetadata.userId, {
-                  subscriptionStatus: null,
-                  stripeSubscriptionId: null,
-                  subscriptionPlan: null,
-                  subscriptionCurrentPeriodEnd: null,
-                  subscriptionCredits: 0,  // Expire credits when subscription ends
-              });
+              // await updateUserSubscription(delMetadata.userId, {
+              //     subscriptionStatus: null,
+              //     stripeSubscriptionId: null,
+              //     subscriptionPlan: null,
+              //     subscriptionCurrentPeriodEnd: null,
+              //     subscriptionCredits: 0,  // Expire credits when subscription ends
+              // });
 
                 console.log(
                   `✅ Expired credits at subscription end and canceled subscription for user ${delMetadata.userId} | Canceled subscription id :${deletedSub.id}`
