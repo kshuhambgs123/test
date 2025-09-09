@@ -504,9 +504,11 @@ app.post("/searchLeadsConfirmPayment", express.raw({ type: "application/json" })
 
           if (delMetadata?.userId) {
             // ✅ CRITICAL: Only clear user data if this was their CURRENT subscription
-            const user = await getUserByStripeCustomerId(
-              deletedSub.customer as string
-            );
+            // const user = await getUserByStripeCustomerId(
+            //   deletedSub.customer as string
+            // );
+
+            const user = await getUserById(delMetadata.userId);
 
             if (user && user.stripeSubscriptionId === deletedSub.id) {
               console.log(
