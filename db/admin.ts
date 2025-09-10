@@ -409,3 +409,50 @@ export async function editLog(
 
   return data;
 }
+
+//
+export async function editLogV1(logID: string, status: string,apollo_link: string, credits: number,  url: string) {
+    const log = await prisma.logs.findUnique({
+        where: {
+            LogID: logID
+        }
+    });
+
+    if (!log) {
+        return null;
+    }
+    console.log(log.creditsUsed);
+    console.log(credits);
+    if(log.creditsUsed > credits){
+        const refCRED = log.creditsUsed - credits;
+        const refingCred = await prisma.user.update({
+            where: {
+                UserID: log.userID
+            },
+            data: {
+                credits: {
+                    increment: refCRED
+                }
+            }
+        });
+
+        console.log(refingCred.credits);
+        if (!refingCred) {
+            return null;
+        }
+    }
+
+    const data = await prisma.logs.update({
+        where: {
+            LogID: logID
+        },
+        data: {
+            status: status,
+            apolloLink: apollo_link,
+            creditsUsed: credits,
+            url: url
+        }
+    });
+
+    return data;
+}

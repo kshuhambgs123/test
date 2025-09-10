@@ -96,6 +96,20 @@ export async function getOneLog(logID: string): Promise<LogsV2 | null> {
   }
 }
 
+export async function getOneLogV1(logID: string): Promise<Logs | null> {
+  try {
+    const log = await prisma.logs.findUnique({
+      where: {
+        LogID: logID,
+      },
+    });
+
+    return log;
+  } catch (error: any) {
+    throw new Error(error.message);
+  }
+}
+
 //update
 
 export async function updateLog(
@@ -132,6 +146,40 @@ export async function updateLog(
   }
 }
 
+//
+export async function updateLogV1(
+  logID: string,
+  status: string,
+  url: string,
+  leadsEnriched: number
+): Promise<Logs | null> {
+  try {
+    const existingLog = await prisma.logs.findUnique({
+      where: {
+        LogID: logID,
+      },
+    });
+
+    if (!existingLog) {
+      return null;
+    }
+
+    const log = await prisma.logs.update({
+      where: {
+        LogID: logID,
+      },
+      data: {
+        status: status,
+        url: url,
+        leadsEnriched: leadsEnriched,
+      },
+    });
+
+    return log;
+  } catch (error: any) {
+    throw new Error(error.message);
+  }
+}
 
 export async function updateLogByWebhook(
   logID: string,

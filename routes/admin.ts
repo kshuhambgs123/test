@@ -1,6 +1,6 @@
 // admin.ts
 
-import { LogsV2 } from "@prisma/client";
+import { LogsV2, Logs } from "@prisma/client";
 import express, { Request, Response } from "express";
 import axios from "axios";
 import fs from "fs";
@@ -10,6 +10,7 @@ import {} from "../";
 import {
   adminLogin,
   editLog,
+  editLogV1,
   generateAPIkey,
   getAllApikeys,
   getAllUsers,
@@ -30,7 +31,9 @@ import {
   getAllUsersSearchLogs,
   getAllV1Logs,
   getOneLog,
+  getOneLogV1,
   updateLog,
+  updateLogV1,
 } from "../db/log";
 import adminVerification from "../middleware/adminAuth";
 import { getSubscriptionTiers, refreshTiers } from "../db/subscription";
@@ -854,7 +857,7 @@ app.post(
         return;
       }
 
-      const log = await getOneLog(logID);
+      const log = await getOneLogV1(logID);
 
       if (!log) {
         res.status(404).json({ message: "Log not found" });
@@ -867,7 +870,7 @@ app.post(
 
       setImmediate(async () => {
         console.log("Checking lead status for logID: ", log?.LogID);
-        const resp = await checkLeadStatus(log as LogsV2);
+        const resp = await checkLeadStatus(log as Logs);
         console.log("Lead status checked for logID: ", log?.LogID);
       });
     } catch (error: any) {
@@ -876,7 +879,7 @@ app.post(
   }
 );
 
-async function checkLeadStatus(log: LogsV2) {
+async function checkLeadStatus(log: Logs) {
   const leadStatusAPI = process.env.SEARCHAUTOMATIONAPISTATUS as string;
 
   try {
@@ -912,7 +915,7 @@ async function checkLeadStatus(log: LogsV2) {
         tries++;
         await new Promise((r) => setTimeout(r, 1 * 60 * 1000));
       }
-      const upLead = await updateLog(log.LogID, "Failed", "", 0);
+      const upLead = await updateLogV1(log.LogID, "Failed", "", 0);
       if (!upLead) {
         return null;
       }
@@ -928,7 +931,7 @@ async function checkLeadStatus(log: LogsV2) {
       response.enrichment_status == "Cancelled" ||
       response.enrichment_status == "Failed"
     ) {
-      const upLead = await updateLog(
+      const upLead = await updateLogV1(
         log.LogID,
         response.enrichment_status,
         response.spreadsheet_url,
@@ -946,7 +949,7 @@ async function checkLeadStatus(log: LogsV2) {
     }
 
     if (response.enrichment_status == "Completed") {
-      const updateLead = await updateLog(
+      const updateLead = await updateLogV1(
         log.LogID,
         response.enrichment_status,
         response.spreadsheet_url,
@@ -960,7 +963,7 @@ async function checkLeadStatus(log: LogsV2) {
       console.log("Lead status completed for logID: ", log.LogID);
     }
   } catch (err: any) {
-    const updateLead = await updateLog(log.LogID, "Failed", "", 0);
+    const updateLead = await updateLogV1(log.LogID, "Failed", "", 0);
     if (!updateLead) {
       return;
     }
@@ -1002,6 +1005,29 @@ app.post(
     }
   }
 );
+
+//
+app.post("/editV1LogAdmin", adminVerification, async (req: Request, res: Response) => {
+    try {
+        const { logID, creditsUsed, status, apollo_link, url} = req.body;
+
+        if (!logID || !status || !apollo_link) {
+            res.status(400).json({ message: "Missing fields" });
+            return;
+        }
+
+        const UpdateLogData = await editLogV1(logID, status, apollo_link, creditsUsed, url);
+
+        if (!UpdateLogData) {
+            res.status(400).json({ message: "Failed to update v1 log" });
+            return;
+        }
+
+        res.status(200).json({ message: "V1 Log updated successfully", log: UpdateLogData });
+    } catch (error: any) {
+        res.status(400).json({ "message": error.message });
+    }
+})
 
 app.get(
   "/getAllBills",
