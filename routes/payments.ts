@@ -1313,17 +1313,33 @@ app.post("/retrieveCoupon", userAuth, async (req: Request, res: Response) => {
   }
 });
 
-app.post("/deleteCustomer", userAuth, async (req: Request, res: Response) => {
-  try {
-    const { customerId } = req.body;
-    const deletedCustomer = await stripeClient.customers.deleteDiscount(
-      customerId
-    );
-    res.status(200).json({ deletedCustomer });
-  } catch (error: any) {
-    res.status(500).json({ message: error.message });
+// app.post("/deleteCustomer", userAuth, async (req: Request, res: Response) => {
+//   try {
+//     const { customerId } = req.body;
+//     const deletedCustomer = await stripeClient.customers.deleteDiscount(
+//       customerId
+//     );
+//     res.status(200).json({ deletedCustomer });
+//   } catch (error: any) {
+//     res.status(500).json({ message: error.message });
+//   }
+// });
+
+app.post(
+  "/deleteCustomerDiscount",
+  userAuth,
+  async (req: Request, res: Response) => {
+    try {
+      const { customerId } = req.body;
+      const deletedCustomer = await stripeClient.customers.deleteDiscount(
+        customerId
+      );
+      res.status(200).json({ deletedCustomer });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
   }
-});
+);
 
 app.post("/updateCouponCode", userAuth, async (req: Request, res: Response) => {
   try {
