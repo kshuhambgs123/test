@@ -156,6 +156,12 @@ app.post("/searchLeadsConfirmPayment", express.raw({ type: "application/json" })
               metadata.userId
             );
 
+             console.log(
+              `💰 update credits for enrich : $${
+                updatedCredits
+              } (Charge: ${paymentIntent.latest_charge})`
+            );
+
             if (!updatedCredits) {
               console.error(
                 `Failed to add credits for user ${metadata.userId}, payment ${paymentIntent.id}`
