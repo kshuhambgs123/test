@@ -89,6 +89,10 @@ app.post("/searchLeadsConfirmPayment", express.raw({ type: "application/json" })
           const paymentIntent = event.data.object as Stripe.PaymentIntent;
           console.log("-- PAYMENT INTENT ID :", paymentIntent.id);
 
+          if(paymentIntent.metadata.version != "v2") return res
+              .status(200)
+              .json({ received: true, reason: "Not for v2", current_version: paymentIntent.metadata.version });
+
           // Skip subscription-related payments - handled by invoice webhook
           if (paymentIntent.invoice || paymentIntent.metadata?.subscriptionPlan ||
                 paymentIntent.description?.toLowerCase().includes("subscription")
@@ -149,7 +153,7 @@ app.post("/searchLeadsConfirmPayment", express.raw({ type: "application/json" })
                 paymentIntent.amount_received / 100
               } (Charge: ${paymentIntent.latest_charge})`
             );
-          
+
             const updatedCredits = await addCreditsWithSearchCredits(
               parseFloat(metadata.credits),
               parseFloat(((parseFloat(metadata.credits) * percentageOfCredits) / 100).toString()),
@@ -702,6 +706,7 @@ app.post(
           userId: userId,
           tierName: tierName,
           credits: tier.credits.toString(),
+          version: "v2"
         },
       });
 
@@ -733,6 +738,7 @@ app.post(
             credits: tier.credits.toString(),
             _afficoneRef: referral ?? "",
             flow: "new_subscription",
+            version: "v2",
           },
         });
       }
@@ -818,6 +824,7 @@ app.post(
             credits: newTier.credits.toString(),
             upgradeFrom: user.stripeSubscriptionId, // Track which subscription this replaces
             isUpgrade: "true",
+            version: "v2",
           },
         });
 
@@ -847,6 +854,7 @@ app.post(
               userId,
               tierName: newTierName,
               credits: newTier.credits.toString(),
+              version: "v2",
             },
           });
         }
@@ -1132,6 +1140,7 @@ app.post(
           currency: currency,
           userId: userID,
           clientName: cientName,
+          version: "v2",
         },
       });
 
