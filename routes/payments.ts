@@ -86,10 +86,12 @@ app.post("/searchLeadsConfirmPayment", express.raw({ type: "application/json" })
           console.log("-- PAYMENT INTENT ID :", paymentIntent.id);
 
           // Skip subscription-related payments - handled by invoice webhook
-          if (
-            paymentIntent.description === "Subscription update" ||
+          // if (paymentIntent.invoice || paymentIntent.metadata?.subscriptionPlan ||
+          //       paymentIntent.description?.toLowerCase().includes("subscription")
+            /* paymentIntent.description === "Subscription update" ||
             paymentIntent.description?.includes("subscription")
-          ) {
+           */ // ) {
+          if (paymentIntent.invoice) {
             console.log(
               `Skipping subscription payment intent: ${paymentIntent.id}`
             );
@@ -144,11 +146,18 @@ app.post("/searchLeadsConfirmPayment", express.raw({ type: "application/json" })
                 paymentIntent.amount_received / 100
               } (Charge: ${paymentIntent.latest_charge})`
             );
+            console.log("payment intent before enrich credit : ", paymentIntent)
 
             const updatedCredits = await addCreditsWithSearchCredits(
               parseFloat(metadata.credits),
               parseFloat(((parseFloat(metadata.credits) * percentageOfCredits) / 100).toString()),
               metadata.userId
+            );
+
+            console.log(
+              `💰 Called for enrich $${
+                updatedCredits
+              })`
             );
 
             if (!updatedCredits) {
