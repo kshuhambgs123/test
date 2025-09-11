@@ -1,6 +1,7 @@
 import { Logs, LogsV2 } from "@prisma/client";
 import { prisma } from "./index";
 import { deductCredits } from "./subscription";
+import { getUserOne } from "./user";
 
 // create
 export async function createLog(
@@ -376,11 +377,24 @@ export async function getAllUsersSearchLogs(page = 1, pageSize = 10) {
   ]);
 
   // Parse JSON fields
-  const data = rawData.map((log) => ({
-    ...log,
-    search_filter: safeJSONParse(log.search_filter),
-    pass_filter: safeJSONParse(log.pass_filter),
-  }));
+  // const data = rawData.map((log) => ({
+  //   ...log,
+  //   search_filter: safeJSONParse(log.search_filter),
+  //   pass_filter: safeJSONParse(log.pass_filter),
+  // }));
+
+  const data = await Promise.all(
+  rawData.map(async (log) => {
+    const user = log?.user_id ? await getUserOne(log.user_id) : null;
+
+    return {
+      ...log,
+      search_filter: safeJSONParse(log.search_filter),
+      pass_filter: safeJSONParse(log.pass_filter),
+      email: user?.email || ''
+    };
+    })
+  );
 
   const pageTotal = Math.ceil(total / pageSize);
 

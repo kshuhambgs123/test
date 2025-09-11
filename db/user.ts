@@ -50,6 +50,22 @@ export async function getUser(userID: string): Promise<User | null> {
   }
 }
 
+export async function getUserOne(userID: string): Promise<any | null> {
+  try {
+    const user = await prisma.user.findUnique({
+      where: {
+        UserID: userID,
+      },
+      select: {
+      email: true,
+    },
+    });
+    return user || null;
+  } catch (error: any) {
+    throw new Error(error.message);
+  }
+}
+
 export async function addCredits(
   addCreds: number,
   userId: string
