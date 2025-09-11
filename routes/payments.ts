@@ -1084,7 +1084,6 @@ app.post(
   async (req: Request, res: Response) => {
     try {
       const {
-        amount,
         currency,
         costumerID,
         description,
@@ -1093,6 +1092,7 @@ app.post(
         credits,
         userID,
         cientName,
+        couponCode
       } = req.body;
 
       if (!currency || !credits) {
@@ -1126,8 +1126,33 @@ app.post(
       // Calculate amount for Stripe (in smallest currency unit)
       const amountCalculated = Math.round(amountInUSDPerThousandCredit * currencyRate * 100);
 
+      const coupon = couponCode ? await stripeClient.coupons.retrieve(couponCode) : null;
+
+      let discountedAmount = 0;
+
+      if (coupon) {
+         const updateUser =  await stripeClient.customers.update(costumerID, {
+            coupon: couponCode,
+          });
+
+          if(updateUser) { 
+            if(coupon.percent_off && coupon.percent_off > 0) {
+             discountedAmount =
+                Number(amountCalculated) -
+                Number(amountCalculated) * (coupon.percent_off / 100);
+            } 
+            else if(coupon.amount_off && coupon.amount_off > 0){
+              discountedAmount =
+                  Number(amountCalculated) -
+                  Number(coupon.amount_off);
+            }
+          }
+      }
+
+      console.log("discounted price v2 :: ", amountCalculated, discountedAmount)
+
       const paymentIntent = await stripeClient.paymentIntents.create({
-        amount: amount ? amount : amountCalculated,
+        amount: discountedAmount ? discountedAmount : amountCalculated,
         currency: currency,
         customer: costumerID,
         description: description,
