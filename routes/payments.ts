@@ -680,7 +680,7 @@ app.post(
   userAuth,
   async (req: Request, res: Response) => {
     try {
-      const { customerId, tierName, userId, referral }: SubscriptionCreateRequest =
+      const { customerId, tierName, userId, referral, couponCode }: SubscriptionCreateRequest =
         req.body;
 
       const SUBSCRIPTION_TIERS = await getSubscriptionTiers();
@@ -701,6 +701,7 @@ app.post(
         items: [{ price: tier.priceId }],
         payment_behavior: "default_incomplete", // CRITICAL: Requires immediate payment
         expand: ["latest_invoice.payment_intent"],
+        discounts: couponCode ? [{ promotion_code: couponCode }] : undefined, // ✅ apply coupon
         metadata: {
           _afficoneRef: referral ?? "",
           userId: userId,
@@ -769,7 +770,7 @@ app.post(
   userAuth,
   async (req: Request, res: Response) => {
     try {
-      const { customerId, newTierName, userId, referral }: SubscriptionUpgradeRequest =
+      const { customerId, newTierName, userId, referral, couponCode }: SubscriptionUpgradeRequest =
         req.body;
 
       // Check for upgrade lock first
@@ -817,6 +818,7 @@ app.post(
           items: [{ price: newTier.priceId }],
           payment_behavior: "default_incomplete", // Immediate payment required
           expand: ["latest_invoice.payment_intent"],
+          discounts: couponCode ? [{ promotion_code: couponCode }] : undefined, // ✅ apply coupon
           metadata: {
             _afficoneRef: referral ?? "",
             userId: userId,

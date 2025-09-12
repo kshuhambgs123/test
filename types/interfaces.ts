@@ -98,14 +98,16 @@ export interface SubscriptionCreateRequest {
   customerId: string;
   tierName: string;
   userId: string;
-  referral: string
+  referral: string;
+  couponCode?: string;
 }
 
 export interface SubscriptionUpgradeRequest {
   customerId: string;
   newTierName: string;
   userId: string;
-  referral: string
+  referral: string;
+  couponCode?: string;
 }
 
 export interface LeadStatusResponse {
