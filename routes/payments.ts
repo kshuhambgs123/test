@@ -699,9 +699,9 @@ app.post(
       const subscription = await stripeClient.subscriptions.create({
         customer: customerId,
         items: [{ price: tier.priceId }],
+        coupon: couponCode,
         payment_behavior: "default_incomplete", // CRITICAL: Requires immediate payment
         expand: ["latest_invoice.payment_intent"],
-        discounts: couponCode ? [{ promotion_code: couponCode }] : undefined, // ✅ apply coupon
         metadata: {
           _afficoneRef: referral ?? "",
           userId: userId,
@@ -816,9 +816,9 @@ app.post(
         const newSubscription = await stripeClient.subscriptions.create({
           customer: customerId,
           items: [{ price: newTier.priceId }],
+          coupon: couponCode,
           payment_behavior: "default_incomplete", // Immediate payment required
           expand: ["latest_invoice.payment_intent"],
-          discounts: couponCode ? [{ promotion_code: couponCode }] : undefined, // ✅ apply coupon
           metadata: {
             _afficoneRef: referral ?? "",
             userId: userId,
